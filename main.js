@@ -123,12 +123,14 @@ recognition.interimResults = false;
 // recognition.maxAlternatives = 0;
 
 window.recognition.onresult = function(event) {
-  var speechResult = event.results[0][0].transcript.toLowerCase();
+  var speechResult = event.results[0][0].transcript
   // diagnosticPara.textContent = 'Speech received: ' + speechResult + '.';
   console.log('Result: ' + speechResult);
   console.log('Confidence: ' + event.results[0][0].confidence);
 
-  var response = "Извините, не поняла.";
+  var response = "Извините, не поняла, что значит " + speechResult;
+
+  speechResult = speechResult.toLowerCase();
   if(speechResult.includes("тюлен"))
   {
     response = window.seals;
