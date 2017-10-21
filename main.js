@@ -88,7 +88,7 @@ $(document).ready(function() {
   } else {
     // alert('Your browser doesnt support geolocation. Sorry.');
       // var api_url = 'http://api.openweathermap.org/data/2.5/weather?lat=60.439803&lon=30.097812&units=metric&appid=' + window.owmAPIkey;
-      api_url = 'http://api.openweathermap.org/data/2.5/weather?id=498817&units=metric&appid=' + window.owmAPIkey;
+      api_url = 'https://api.openweathermap.org/data/2.5/weather?id=498817&units=metric&appid=' + window.owmAPIkey;
 
       getweather(api_url, "в И́нгрии");
   }
