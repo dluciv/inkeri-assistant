@@ -21,6 +21,8 @@ for(var u in _units)
 
 function declinateUnit(value, unit){
   var a = _units[unit];
+  if(value < 0)
+    value = -value;
   var lastdigit = value % 10;
   var lasttwodigits = value % 100;
   if(lasttwodigits >= 10 && lasttwodigits <= 20)
