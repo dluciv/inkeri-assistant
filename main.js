@@ -128,7 +128,7 @@ window.recognition.onresult = function(event) {
   console.log('Result: ' + speechResult);
   console.log('Confidence: ' + event.results[0][0].confidence);
 
-  var response = "Извините, не поняла, что значит " + speechResult;
+  var response = "Извините, не поняла, что значит " + speechResult + ". Меня можно спросить про погоду, тюленей, вальдшнепов и зомби.";
 
   speechResult = speechResult.toLowerCase();
   if(speechResult.includes("тюлен"))
