@@ -114,6 +114,7 @@ function speaksmth(text) {
 var seals_ok = "Ситуация с тюленями спокойная.";
 var seals_not_ok = "Ситуация с тюленями угрожающая.";
 window.seals = seals_ok;
+window.seals_full = seals_ok;
 var seals_url = 'https://vk.com/sealrescue';
 
 var getSealStatus = function(callback) {
@@ -127,17 +128,18 @@ var getSealStatus = function(callback) {
 						if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
 								var moodInfo = analyze(lastPostText);
 								// console.log(moodInfo);
-								callback(moodInfo.score);
+								callback(moodInfo.score, lastPostText);
 						}
 				},
 				error: function(err) {
 						console.log('err', err);
-						callback(0);
+						callback(0, "");
 				}
 		})
 }
-getSealStatus(function(status) {
+getSealStatus(function(status, text) {
 		window.seals = (status >= 0) ? seals_ok : seals_not_ok;
+		window.seals_full = window.seals + " " + text;
 });
 
 window.woodcocks = "Ситуация с ва́льдшнепами спокойная.";
@@ -164,7 +166,7 @@ window.recognition.onresult = function(event) {
   speechResult = speechResult.toLowerCase();
   if(speechResult.includes("тюлен"))
   {
-    response = window.seals;
+    response = window.seals_full;
   } else if(speechResult.includes("вальдшне")) {
     response = window.woodcocks;
   } else if(speechResult.includes("зомби")) {
