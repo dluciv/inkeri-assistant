@@ -115,7 +115,7 @@ var seals_ok = "Ситуация с тюленями спокойная.";
 var seals_not_ok = "Ситуация с тюленями угрожающая.";
 window.seals = seals_ok;
 window.seals_full = seals_ok;
-var seals_url = 'https://vk.com/sealrescue';
+var seals_url = 'https://matrix.dluciv.name/vksealrescuerss';
 
 var getSealStatus = function(callback) {
 		$.ajax({
@@ -123,7 +123,9 @@ var getSealStatus = function(callback) {
 				url: seals_url,
 				success: function(data) {
 						// console.log('ok', data);
-						var lastPostText = jQuery('.wall_post_text', data)[0].innerHTML;
+						var parsed = $.parseXML(data);
+						var lastPostHtml = $(parsed).find('item description').first().text();
+						var lastPostText = $(lastPostHtml).text();
 						console.log(lastPostText);
 						if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
 								var moodInfo = analyze(lastPostText);
@@ -164,7 +166,7 @@ window.recognition.onresult = function(event) {
   var response = "Извините, не поняла, что значит " + speechResult + ". Меня можно спросить про погоду, тюленей, вальдшнепов и зомби.";
 
   speechResult = speechResult.toLowerCase();
-  if(speechResult.includes("тюлен"))
+  if(true || speechResult.includes("тюлен"))
   {
     response = window.seals_full;
   } else if(speechResult.includes("вальдшне")) {
