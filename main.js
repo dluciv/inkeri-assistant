@@ -198,7 +198,7 @@ var zp = 800 + Math.round(Math.random()*50);
 window.zombies = "Вероятность зомби-атаки — " + zp + " на миллион. Это меньше статистической погрешности.";
 
 function tell_status() {
-  window.speaksmth("Привет! Говорит И́нкери Норпа Лехтокурпа. " + window.weather + ' ' +  window.seals + ' ' + window.seal_background_value + ' ' +  window.woodcocks + ' ' + window.zombies + ' ' + "Спасибо, всего доброго!");
+  window.speaksmth("Привет! Говорит И́нкери Норпа Лехтокурпа. " + window.weather + ' ' +  window.seals + ' ' + window.seal_back_value + ' ' +  window.woodcocks + ' ' + window.zombies + ' ' + "Спасибо, всего доброго!");
 };
 
 window.recognition = new SpeechRecognition();
