@@ -166,7 +166,7 @@ window.recognition.onresult = function(event) {
   var response = "Извините, не поняла, что значит " + speechResult + ". Меня можно спросить про погоду, тюленей, вальдшнепов и зомби.";
 
   speechResult = speechResult.toLowerCase();
-  if(true || speechResult.includes("тюлен"))
+  if(speechResult.includes("тюлен"))
   {
     response = window.seals_full;
   } else if(speechResult.includes("вальдшне")) {
