@@ -13,7 +13,7 @@ var _units = {
   "метр" : ["метра", "метров"],
   "миллиметр" : ["миллиметра", "миллиметров"],
   "процент": ["процента", "процентов"],
-  "микротюлень": ["микротюленя", "микротюленей"],
+  "тюлень": ["тюленя", "тюленей"],
 };
 
 for(var u in _units)
@@ -154,8 +154,8 @@ var seal_background = function(parsed) {
   var halflife = 60*60*24*1; // 1 сутки - период полураспада события
   var ap = 31536000 / 12; // анализируем за месяц
   var tulsec = get_ewma(now, pubdates, halflife, ap);
-  var micro_tul_hour = tulsec * 1e6 * 3600;
-  return "Фон — " + micro_tul_hour + " " + declinateUnit(micro_tul_hour, "микротюлень") + " в час. ";
+  var micro_tul_hour = Math.round(tulsec * 1e6 * 3600);
+  return "Фон — " + micro_tul_hour + " микро " + declinateUnit(micro_tul_hour, "тюлень") + " в час. ";
 }
 
 window.seal_background_value = "";
