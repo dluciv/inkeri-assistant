@@ -1,4 +1,5 @@
 ﻿window.owmAPIkey = "65b3dc1574aadec85e6638331e30b380"; // dluciv@gmail.com
+window.exports = {};
 
 var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
 var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
@@ -110,7 +111,35 @@ function speaksmth(text) {
   synth.speak(utterThis);
 };
 
-window.seals = "Ситуация с тюленями спокойная.";
+var seals_ok = "Ситуация с тюленями спокойная.";
+var seals_not_ok = "Ситуация с тюленями угрожающая.";
+window.seals = seals_ok;
+var seals_url = 'https://vk.com/sealrescue';
+
+var getSealStatus = function(callback) {
+		$.ajax({
+				method: 'GET',
+				url: seals_url,
+				success: function(data) {
+						// console.log('ok', data);
+						var lastPostText = jQuery('.wall_post_text', data)[0].innerHTML;
+						console.log(lastPostText);
+						if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
+								var moodInfo = analyze(lastPostText);
+								// console.log(moodInfo);
+								callback(moodInfo.score);
+						}
+				},
+				error: function(err) {
+						console.log('err', err);
+						callback(0);
+				}
+		})
+}
+getSealStatus(function(status) {
+		window.seals = (status >= 0) ? seals_ok : seals_not_ok;
+});
+
 window.woodcocks = "Ситуация с ва́льдшнепами спокойная.";
 var zp = 800 + Math.round(Math.random()*50);
 window.zombies = "Вероятность зомби-атаки — " + zp + " на миллион. Это меньше статистической погрешности.";
