@@ -144,7 +144,9 @@ var get_ewma = function(now, moments, half_life, notolder) {
   return total_weighted_events / total_weighted_time;
 }
 
-var seal_background = function(parsed) {
+window.seal_back_value = " ";
+
+var measure_seal_background = function(parsed) {
   var now = new Date().getTime();
   var pubdates = [];
   $(parsed).find('item pubDate').each(function(){
@@ -155,10 +157,8 @@ var seal_background = function(parsed) {
   var ap = 31536000 / 12; // анализируем за месяц
   var tulsec = get_ewma(now, pubdates, halflife, ap);
   var micro_tul_hour = Math.round(tulsec * 1e6 * 3600);
-  return "Фон — " + micro_tul_hour + " микро " + declinateUnit(micro_tul_hour, "тюлень") + " в час. ";
+  window.seal_back_value = " Фон — " + micro_tul_hour + " микро" + declinateUnit(micro_tul_hour, "тюлень") + " в час. ";
 }
-
-window.seal_background_value = "";
 
 var getSealStatus = function(callback) {
 		$.ajax({
@@ -167,14 +167,14 @@ var getSealStatus = function(callback) {
 				success: function(data) {
 						// console.log('ok', data);
 						var parsed = $.parseXML(data);
-						window.seal_background_value = seal_background(parsed);
+						measure_seal_background(parsed);
 						var lastPostHtml = $(parsed).find('item description').first().text();
 						var lastPostText = $(lastPostHtml).text();
 						console.log(lastPostText);
 						if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
 								var moodInfo = analyze(lastPostText);
 								// console.log(moodInfo);
-								callback(moodInfo.score, window.seal_background_value + lastPostText);
+								callback(moodInfo.score, lastPostText);
 						}
 				},
 				error: function(err) {
@@ -186,7 +186,7 @@ var getSealStatus = function(callback) {
 getSealStatus(function(status, text) {
     window.seals = (status >= 0) ? seals_ok : seals_not_ok;
     if (text.trim()) {
-	window.seals_full = window.seals + " " + seals_full_prefix + text;
+	window.seals_full = window.seals + window.seal_back_value + " " + seals_full_prefix + text;
     }
     else {
 	window.seals_full = window.seals;
