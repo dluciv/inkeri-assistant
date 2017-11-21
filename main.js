@@ -114,6 +114,7 @@ function speaksmth(text) {
 var seals_ok = "Ситуация с тюленями обнадёживающая.";
 var seals_not_ok = "Ситуация с тюленями угрожающая.";
 var seals_default = "Ситуация с тюленями спокойная.";
+var seals_full_prefix = "Центр реабилитации морских млекопитающих Ленинградской области сообщает: ";
 window.seals = seals_default;
 window.seals_full = seals_default;
 var seals_url = 'https://matrix.dluciv.name/vksealrescuerss';
@@ -141,8 +142,13 @@ var getSealStatus = function(callback) {
 		})
 }
 getSealStatus(function(status, text) {
-		window.seals = (status >= 0) ? seals_ok : seals_not_ok;
-		window.seals_full = window.seals + " " + text;
+    window.seals = (status >= 0) ? seals_ok : seals_not_ok;
+    if (text.trim()) {
+	window.seals_full = window.seals + " " + seals_full_prefix + text;
+    }
+    else {
+	window.seals_full = window.seals;
+    }
 });
 
 window.woodcocks = "Ситуация с ва́льдшнепами спокойная.";
