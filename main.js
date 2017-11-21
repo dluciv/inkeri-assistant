@@ -113,8 +113,11 @@ function speaksmth(text) {
 
 var seals_ok = "Ситуация с тюленями обнадёживающая.";
 var seals_not_ok = "Ситуация с тюленями угрожающая.";
-window.seals = "Ситуация с тюленями спокойная.";
-var seals_url = 'https://matrix.dluciv.name/vksealrescue';
+var seals_default = "Ситуация с тюленями спокойная.";
+var seals_full_prefix = "Центр реабилитации морских млекопитающих Ленинградской области сообщает: ";
+window.seals = seals_default;
+window.seals_full = seals_default;
+var seals_url = 'https://matrix.dluciv.name/vksealrescuerss';
 
 var getSealStatus = function(callback) {
 		$.ajax({
@@ -122,22 +125,30 @@ var getSealStatus = function(callback) {
 				url: seals_url,
 				success: function(data) {
 						// console.log('ok', data);
-						var lastPostText = jQuery('.wall_post_text', data)[0].innerHTML;
+						var parsed = $.parseXML(data);
+						var lastPostHtml = $(parsed).find('item description').first().text();
+						var lastPostText = $(lastPostHtml).text();
 						console.log(lastPostText);
 						if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
 								var moodInfo = analyze(lastPostText);
 								// console.log(moodInfo);
-								callback(moodInfo.score);
+								callback(moodInfo.score, lastPostText);
 						}
 				},
 				error: function(err) {
 						console.log('err', err);
-						callback(0);
+						callback(0, "");
 				}
 		})
 }
-getSealStatus(function(status) {
-		window.seals = (status >= 0) ? seals_ok : seals_not_ok;
+getSealStatus(function(status, text) {
+    window.seals = (status >= 0) ? seals_ok : seals_not_ok;
+    if (text.trim()) {
+	window.seals_full = window.seals + " " + seals_full_prefix + text;
+    }
+    else {
+	window.seals_full = window.seals;
+    }
 });
 
 window.woodcocks = "Ситуация с ва́льдшнепами спокойная.";
@@ -164,7 +175,7 @@ window.recognition.onresult = function(event) {
   speechResult = speechResult.toLowerCase();
   if(speechResult.includes("тюлен"))
   {
-    response = window.seals;
+    response = window.seals_full;
   } else if(speechResult.includes("вальдшне")) {
     response = window.woodcocks;
   } else if(speechResult.includes("зомби")) {
