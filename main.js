@@ -114,7 +114,7 @@ function speaksmth(text) {
 var seals_ok = "Ситуация с тюленями спокойная.";
 var seals_not_ok = "Ситуация с тюленями угрожающая.";
 window.seals = seals_ok;
-var seals_url = 'https://vk.com/sealrescue';
+var seals_url = 'https://matrix.dluciv.name/vksealrescuerss';
 
 var getSealStatus = function(callback) {
 		$.ajax({
