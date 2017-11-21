@@ -115,7 +115,7 @@ function speaksmth(text) {
 var seals_ok = "Ситуация с тюленями обнадёживающая.";
 var seals_not_ok = "Ситуация с тюленями угрожающая.";
 var seals_default = "Ситуация с тюленями спокойная.";
-var seals_full_prefix = "Центр реабилитации морских млекопитающих Ленинградской области сообщает: ";
+var seals_full_prefix = "Центр реабилитации морских млекопитающих Ленинградской области сообщает. ";
 window.seals = seals_default;
 window.seals_full = seals_default;
 var seals_url = 'https://matrix.dluciv.name/vksealrescuerss';
