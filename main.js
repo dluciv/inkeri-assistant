@@ -111,9 +111,9 @@ function speaksmth(text) {
   synth.speak(utterThis);
 };
 
-var seals_ok = "Ситуация с тюленями спокойная.";
+var seals_ok = "Ситуация с тюленями обнадёживающая.";
 var seals_not_ok = "Ситуация с тюленями угрожающая.";
-window.seals = seals_ok;
+window.seals = "Ситуация с тюленями спокойная.";
 var seals_url = 'https://matrix.dluciv.name/vksealrescue';
 
 var getSealStatus = function(callback) {
