@@ -13,6 +13,7 @@ var _units = {
   "метр" : ["метра", "метров"],
   "миллиметр" : ["миллиметра", "миллиметров"],
   "процент": ["процента", "процентов"],
+  "микротюлень": ["микротюленя", "микротюленей"],
 };
 
 for(var u in _units)
@@ -119,6 +120,46 @@ window.seals = seals_default;
 window.seals_full = seals_default;
 var seals_url = 'https://matrix.dluciv.name/vksealrescuerss';
 
+var get_ewma = function(now, moments, half_life, notolder) {
+
+  var events = moments.slice();
+  events.sort();
+  var total_weighted_events = 0.0;
+
+  for(var i = 0; i < events.length; ++i) {
+    var e = events[i];
+    var d = (now - e) / 1000.0;
+    if(d > notolder)
+      continue;
+    var weight = Math.pow(2, -d/half_life);
+    total_weighted_events += weight;
+  }
+
+  // total_weighted_seconds = \sum_{d = 0}^{analysis_period} 2^{-d/half_life} =
+  // \frac{1 - q^n}{1-q}, q^{half_life} = 1/2.
+
+  var q = Math.pow(2, -1/half_life);
+  var total_weighted_time = (1 - Math.pow(q, notolder)) / (1 - q);
+
+  return total_weighted_events / total_weighted_time;
+}
+
+var seal_background = function(parsed) {
+  var now = new Date().getTime();
+  var pubdates = [];
+  $(parsed).find('item pubDate').each(function(){
+    pubdates.push(new Date($(this).text()).getTime());
+  });
+
+  var halflife = 60*60*24*1; // 1 сутки - период полураспада события
+  var ap = 31536000 / 12; // анализируем за месяц
+  var tulsec = get_ewma(now, pubdates, halflife, ap);
+  var micro_tul_hour = tulsec * 1e6 * 3600;
+  return "Фон — " + micro_tul_hour + " " + declinateUnit(micro_tul_hour, "микротюлень") + " в час. ";
+}
+
+window.seal_background_value = "";
+
 var getSealStatus = function(callback) {
 		$.ajax({
 				method: 'GET',
@@ -126,13 +167,14 @@ var getSealStatus = function(callback) {
 				success: function(data) {
 						// console.log('ok', data);
 						var parsed = $.parseXML(data);
+						window.seal_background_value = seal_background(parsed);
 						var lastPostHtml = $(parsed).find('item description').first().text();
 						var lastPostText = $(lastPostHtml).text();
 						console.log(lastPostText);
 						if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
 								var moodInfo = analyze(lastPostText);
 								// console.log(moodInfo);
-								callback(moodInfo.score, lastPostText);
+								callback(moodInfo.score, window.seal_background_value + lastPostText);
 						}
 				},
 				error: function(err) {
@@ -156,7 +198,7 @@ var zp = 800 + Math.round(Math.random()*50);
 window.zombies = "Вероятность зомби-атаки — " + zp + " на миллион. Это меньше статистической погрешности.";
 
 function tell_status() {
-  window.speaksmth("Привет! Говорит И́нкери Норпа Лехтокурпа. " + window.weather + ' ' +  window.seals + ' ' +  window.woodcocks + ' ' + window.zombies + ' ' + "Спасибо, всего доброго!");
+  window.speaksmth("Привет! Говорит И́нкери Норпа Лехтокурпа. " + window.weather + ' ' +  window.seals + ' ' + window.seal_background_value + ' ' +  window.woodcocks + ' ' + window.zombies + ' ' + "Спасибо, всего доброго!");
 };
 
 window.recognition = new SpeechRecognition();
