@@ -113,8 +113,9 @@ function speaksmth(text) {
 
 var seals_ok = "Ситуация с тюленями обнадёживающая.";
 var seals_not_ok = "Ситуация с тюленями угрожающая.";
-window.seals = "Ситуация с тюленями спокойная.";
-window.seals_full = seals_ok;
+var seals_default = "Ситуация с тюленями спокойная.";
+window.seals = seals_default;
+window.seals_full = seals_default;
 var seals_url = 'https://matrix.dluciv.name/vksealrescuerss';
 
 var getSealStatus = function(callback) {
