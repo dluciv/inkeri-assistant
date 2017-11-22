@@ -240,7 +240,6 @@ $(document).ready(function() {
     }
   });
 
-
   try {
     SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
     SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
@@ -281,10 +280,14 @@ $(document).ready(function() {
 	  if (resp.AbstractText) {
 	    response = resp.AbstractText;
 	  }
+	  else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
+	    response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
+	  }
 	  else {
 	    response = response_default;
 	  }
 	  window.speaksmth(response);
+	  console.log(response);
 	},
 	function() {
 	  window.speaksmth(response_default);
