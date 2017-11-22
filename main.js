@@ -50,6 +50,7 @@ function tssss() {
 }
 
 function speaksmth(text) {
+  var bestvoice = "Google русский";
   var synth = window.speechSynthesis;
   var voices = synth.getVoices();
   var ru_voices = voices.filter(function(v){
@@ -60,6 +61,10 @@ function speaksmth(text) {
   for(var v in available_voices){
     if(available_voices[v].default)
       voice = available_voices[v];
+  }
+  for(var v in voices){
+    if(voices[v].name = bestvoice)
+      voice = voices[v];
   }
 
   var utterThis = new SpeechSynthesisUtterance(text);
