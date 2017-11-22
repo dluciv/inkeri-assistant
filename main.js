@@ -277,6 +277,7 @@ $(document).ready(function() {
       searchAnswer(
 	speechResult,
 	function(resp) {
+	  console.log(resp);
 	  if (resp.AbstractText) {
 	    response = resp.AbstractText;
 	  }
