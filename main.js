@@ -63,7 +63,7 @@ function speaksmth(text) {
       voice = available_voices[v];
   }
   for(var v in voices){
-    if(voices[v].name = bestvoice)
+    if(voices[v].name == bestvoice)
       voice = voices[v];
   }
 
