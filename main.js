@@ -1,5 +1,4 @@
 ﻿window.owmAPIkey = "65b3dc1574aadec85e6638331e30b380"; // dluciv@gmail.com
-window.exports = {};
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
