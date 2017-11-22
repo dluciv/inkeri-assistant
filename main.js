@@ -4,13 +4,6 @@ window.exports = {};
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
 var SpeechRecognitionEvent = null;
-try {
-  SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-  SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
-  SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
-} catch (e) {
-  console.log(e);
-}
 
 window.weather = "";
 
@@ -227,6 +220,15 @@ $(document).ready(function() {
     }
   });
 
+
+  try {
+    SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+    SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
+    SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
+  } catch (e) {
+    console.log(e);
+    $("#sttbtn").remove();
+  }
 
   window.recognition = new SpeechRecognition();
   window.recognition.lang = 'ru-RU';
