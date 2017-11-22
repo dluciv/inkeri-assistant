@@ -50,7 +50,6 @@ function tssss() {
 }
 
 function speaksmth(text) {
-  var bestvoice = "Google русский";
   var synth = window.speechSynthesis;
   var voices = synth.getVoices();
   var ru_voices = voices.filter(function(v){
@@ -62,10 +61,15 @@ function speaksmth(text) {
     if(available_voices[v].default)
       voice = available_voices[v];
   }
+  /*
+  Bad idea to use cloud syntheser on Desktop — Google does
+  not render it to the end. 
+  var bestvoice = "Google русский";
   for(var v in voices){
     if(voices[v].name == bestvoice)
       voice = voices[v];
   }
+  */
 
   var utterThis = new SpeechSynthesisUtterance(text);
   // utterThis.rate = 1.1;
