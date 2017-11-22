@@ -1,10 +1,16 @@
 ﻿window.owmAPIkey = "65b3dc1574aadec85e6638331e30b380"; // dluciv@gmail.com
 window.exports = {};
 
-var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
-var SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
-
+var SpeechRecognition = null;
+var SpeechGrammarList = null;
+var SpeechRecognitionEvent = null;
+try {
+  SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+  SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
+  SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
+} catch (e) {
+  console.log(e);
+}
 
 window.weather = "";
 
@@ -47,67 +53,28 @@ function declinateUnit(value, unit){
   }
 }
 
-$(document).ready(function() {
-  var lat, lon, api_url;
-
-  var getweather = function(req, where) {
-    $.ajax({
-      url: api_url,
-      method: 'GET',
-      success: function(data) {
-
-        var tempr = Math.round(data.main.temp);
-        var wind = Math.round(data.wind.speed);
-        var vis = data.visibility;
-        var hum = Math.round(data.main.humidity);
-        var prs = Math.round(0.750062 * data.main.pressure);
-
-        window.weather =
-          "Температура " + where +
-          " — "          + tempr + ' ' + declinateUnit(tempr, "градус"   ) + '. ' +
-          "Ветер — "     + wind  + ' ' + declinateUnit(wind,  "метр"     ) + ' в секунду. ' +
-          "Влажность — " + hum   + "%. " +
-          "Давление — "  + prs   + ' ' + declinateUnit(prs,   "миллиметр") + ' ртутного столба. ';
-
-        console.log(window.weather);
-      }
-    });
-  }
-
-  if (false && "geolocation" in navigator) { // to slow on mobiles...
-
-    navigator.geolocation.getCurrentPosition(gotLocation);
-
-    var gotLocation = function(position) {
-      lat = position.coords.latitude;
-      lon = position.coords.longitude;
-
-      api_url = 'http://api.openweathermap.org/data/2.5/weather?lat=' +
-        lat + '&lon=' +
-        lon + '&units=metric&appid=' + window.owmAPIkey;
-      // http://api.openweathermap.org/data/2.5/weather?q=London,uk&callback=test&appid=b1b15e88fa79722
-
-      getweather(api_url, "за бортом");
-    }
-  } else {
-    // alert('Your browser doesnt support geolocation. Sorry.');
-      // var api_url = 'http://api.openweathermap.org/data/2.5/weather?lat=60.439803&lon=30.097812&units=metric&appid=' + window.owmAPIkey;
-      api_url = 'https://api.openweathermap.org/data/2.5/weather?id=498817&units=metric&appid=' + window.owmAPIkey;
-
-      getweather(api_url, "в И́нгрии");
-  }
-
-});
+function tssss() {
+  window.speechSynthesis.cancel();
+}
 
 function speaksmth(text) {
   var synth = window.speechSynthesis;
-  // var voices = synth.getVoices();
+  var voices = synth.getVoices();
+  var ru_voices = voices.filter(function(v){
+    return v.lang.startsWith("ru");
+  });
+  var available_voices = ru_voices.length > 0 ? ru_voices : voices;
+  var voice = available_voices[0];
+  for(var v in available_voices){
+    if(available_voices[v].default)
+      voice = available_voices[v];
+  }
 
   var utterThis = new SpeechSynthesisUtterance(text);
-  utterThis.rate = 1.1;
-  utterThis.pitch = 1.5;
+  // utterThis.rate = 1.1;
+  utterThis.pitch = 1.4;
   utterThis.lang = 'ru-RU';
-  // utterThis.voice = voices[0];
+  utterThis.voice = voice;
 
   synth.speak(utterThis);
 };
@@ -183,65 +150,121 @@ var getSealStatus = function(callback) {
 				}
 		})
 }
-getSealStatus(function(status, text) {
-    window.seals = (status >= 0) ? seals_ok : seals_not_ok;
-    if (text.trim()) {
-	window.seals_full = window.seals + window.seal_back_value + " " + seals_full_prefix + text;
-    }
-    else {
-	window.seals_full = window.seals;
-    }
-});
 
 window.woodcocks = "Ситуация с ва́льдшнепами спокойная.";
 var zp = 800 + Math.round(Math.random()*50);
 window.zombies = "Вероятность зомби-атаки — " + zp + " на миллион. Это меньше статистической погрешности.";
 
+
 function tell_status() {
   window.speaksmth("Привет! Говорит И́нкери Норпа Лехтокурпа. " + window.weather + ' ' +  window.seals + ' ' + window.seal_back_value + ' ' +  window.woodcocks + ' ' + window.zombies + ' ' + "Спасибо, всего доброго!");
 };
 
-window.recognition = new SpeechRecognition();
-recognition.lang = 'ru-RU';
-recognition.interimResults = false;
-// recognition.maxAlternatives = 0;
-
-window.recognition.onresult = function(event) {
-  var speechResult = event.results[0][0].transcript
-  // diagnosticPara.textContent = 'Speech received: ' + speechResult + '.';
-  console.log('Result: ' + speechResult);
-  console.log('Confidence: ' + event.results[0][0].confidence);
-
-  var response = "Извините, не поняла, что значит " + speechResult + ". Меня можно спросить про погоду, тюленей, вальдшнепов и зомби.";
-
-  speechResult = speechResult.toLowerCase();
-  if(speechResult.includes("тюлен"))
-  {
-    response = window.seals_full;
-  } else if(speechResult.includes("вальдшне")) {
-    response = window.woodcocks;
-  } else if(speechResult.includes("зомби")) {
-    response = window.zombies;
-  } else if(speechResult.includes("погод")) {
-    response = window.weather;
-  }
-  window.speaksmth(response);
-}
-
-window.recognition.onspeechend = function() {
-  var sttBtn = document.querySelector('#sttbtn');
-  sttBtn.disabled = false;
-  window.recognition.stop();
-}
-
-window.recognition.onerror = function(event) {
-  var sttBtn = document.querySelector('#sttbtn');
-  sttBtn.disabled = false;
-  alert("Speech recognition error: " + event.error);
-}
 
 function stt() {
   var sttBtn = document.querySelector('#sttbtn');
   sttBtn.disabled = true;
   window.recognition.start();
 };
+
+$(document).ready(function() {
+  var lat, lon, api_url;
+
+  var getweather = function(req, where) {
+    $.ajax({
+      url: api_url,
+      method: 'GET',
+      success: function(data) {
+
+        var tempr = Math.round(data.main.temp);
+        var wind = Math.round(data.wind.speed);
+        var vis = data.visibility;
+        var hum = Math.round(data.main.humidity);
+        var prs = Math.round(0.750062 * data.main.pressure);
+
+        window.weather =
+          "Температура " + where +
+          " — "          + tempr + ' ' + declinateUnit(tempr, "градус"   ) + '. ' +
+          "Ветер — "     + wind  + ' ' + declinateUnit(wind,  "метр"     ) + ' в секунду. ' +
+          "Влажность — " + hum   + "%. " +
+          "Давление — "  + prs   + ' ' + declinateUnit(prs,   "миллиметр") + ' ртутного столба. ';
+
+        console.log(window.weather);
+      }
+    });
+  }
+
+  if (false && "geolocation" in navigator) { // to slow on mobiles...
+
+    navigator.geolocation.getCurrentPosition(gotLocation);
+
+    var gotLocation = function(position) {
+      lat = position.coords.latitude;
+      lon = position.coords.longitude;
+
+      api_url = 'http://api.openweathermap.org/data/2.5/weather?lat=' +
+        lat + '&lon=' +
+        lon + '&units=metric&appid=' + window.owmAPIkey;
+      // http://api.openweathermap.org/data/2.5/weather?q=London,uk&callback=test&appid=b1b15e88fa79722
+
+      getweather(api_url, "за бортом");
+    }
+  } else {
+    // alert('Your browser doesnt support geolocation. Sorry.');
+      // var api_url = 'http://api.openweathermap.org/data/2.5/weather?lat=60.439803&lon=30.097812&units=metric&appid=' + window.owmAPIkey;
+      api_url = 'https://api.openweathermap.org/data/2.5/weather?id=498817&units=metric&appid=' + window.owmAPIkey;
+
+      getweather(api_url, "в И́нгрии");
+  }
+
+  getSealStatus(function(status, text) {
+    window.seals = (status >= 0) ? seals_ok : seals_not_ok;
+    if (text.trim()) {
+      window.seals_full = window.seals + window.seal_back_value + " " + seals_full_prefix + text;
+    }
+    else {
+      window.seals_full = window.seals;
+    }
+  });
+
+
+  window.recognition = new SpeechRecognition();
+  window.recognition.lang = 'ru-RU';
+  window.recognition.interimResults = false;
+  // window.recognition.maxAlternatives = 0;
+
+  window.recognition.onresult = function(event) {
+    var speechResult = event.results[0][0].transcript
+    // diagnosticPara.textContent = 'Speech received: ' + speechResult + '.';
+    console.log('Result: ' + speechResult);
+    console.log('Confidence: ' + event.results[0][0].confidence);
+
+    var response = "Извините, не поняла, что значит " + speechResult + ". Меня можно спросить про погоду, тюленей, вальдшнепов и зомби.";
+
+    speechResult = speechResult.toLowerCase();
+    if(speechResult.includes("тюлен")) {
+      response = window.seals_full;
+    } else if(speechResult.includes("вальдшне")) {
+      response = window.woodcocks;
+    } else if(speechResult.includes("зомби")) {
+      response = window.zombies;
+    } else if(speechResult.includes("погод")) {
+      response = window.weather;
+    }
+    window.speaksmth(response);
+  }
+
+  window.recognition.onspeechend = function() {
+    var sttBtn = document.querySelector('#sttbtn');
+    sttBtn.disabled = false;
+    window.recognition.stop();
+  }
+
+  window.recognition.onerror = function(event) {
+    var sttBtn = document.querySelector('#sttbtn');
+    sttBtn.disabled = false;
+    alert("Speech recognition error: " + event.error);
+  }
+
+
+});
