@@ -218,6 +218,13 @@ function stt() {
     console.log('stt: already started');
   }
 };
+function stp() {
+  console.log('stp');
+  var sttBtn = document.querySelector('#sttbtn');
+  sttBtn.disabled = false;
+  window.recognition.stop();
+  started = false;
+}
 
 var searchAnswer = function(text, onSuccess, onError) {
   $.ajax({
@@ -374,7 +381,7 @@ $(document).ready(function() {
       console.log("question event");
       var speechResultTrimmed = clearSpeech(speechResult);
       t_ga('speech_recognition', 'question', speechResultTrimmed);
-      window.recognition.stop();
+      stp();
       searchAnswer(
 	speechResultTrimmed,
 	function(resp) {
@@ -429,10 +436,9 @@ $(document).ready(function() {
 
   window.recognition.onspeechend = function() {
     console.log('onspeechend');
-    var sttBtn = document.querySelector('#sttbtn');
-    sttBtn.disabled = false;
-    window.recognition.stop();
-    started = false;
+    if (!isAlwaysOn) {
+      stp();
+    }
   }
 
   window.recognition.onerror = function(event) {
