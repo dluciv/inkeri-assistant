@@ -300,6 +300,7 @@ $(document).ready(function() {
   window.recognition = new SpeechRecognition();
   window.recognition.lang = 'ru-RU';
   window.recognition.interimResults = false;
+  window.recognition.continuous = isAlwaysOn;
   // window.recognition.maxAlternatives = 0;
 
   window.recognition.onresult = function(event) {
@@ -324,6 +325,7 @@ $(document).ready(function() {
       console.log("question event");
       var speechResultTrimmed = speechResult.toLowerCase().replace("инкери", "").replace("расскажи", "").replace("такое", "").replace("такой", "").replace("что", "").replace("кто", "").trim();
       t_ga('speech_recognition', 'question', speechResultTrimmed);
+      window.recognition.stop();
       searchAnswer(
 	speechResultTrimmed,
 	function(resp) {
@@ -339,9 +341,11 @@ $(document).ready(function() {
 	  }
 	  window.speaksmth(response);
 	  console.log(response);
+	  window.recognition.start();
 	},
 	function() {
 	  window.speaksmth(response_default);
+	  window.recognition.start();
 	});
       response = "";      
     } else if(speechResult.trim() != "") {
@@ -367,7 +371,10 @@ $(document).ready(function() {
 	});
       response = "";
     }
-    window.speaksmth(response);
+
+    if (response != "") {
+      window.speaksmth(response);
+    }
   }
 
   window.recognition.onspeechend = function() {
@@ -381,5 +388,9 @@ $(document).ready(function() {
     sttBtn.disabled = false;
     alert("Speech recognition error: " + event.error);
     t_ga('speech_recognition', 'recognition_error', event.error.toString());
+  }
+
+  if (isAlwaysOn) {
+    window.recognition.start();
   }
 });
