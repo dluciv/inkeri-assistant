@@ -282,7 +282,7 @@ $(document).ready(function() {
     console.log('Result: ' + speechResult);
     console.log('Confidence: ' + event.results[0][0].confidence);
 
-    var response_default = "Извините, знаю, что значит " + speechResult + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
+    var response_default = "Извините, не знаю, что значит " + speechResult + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
     var response = response_default
 
     speechResult = speechResult.toLowerCase();
