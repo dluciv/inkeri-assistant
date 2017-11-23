@@ -168,6 +168,27 @@ function stt() {
   window.recognition.start();
 };
 
+var searchAnswer = function(text, onSuccess, onError) {
+  $.ajax({
+    url: 'https://api.duckduckgo.com/?q=' + encodeURIComponent(text) + '&format=json',
+    method: 'GET',
+    success: function(resp) {
+      var data = JSON.parse(resp);
+      if (data) {
+	onSuccess(data);
+      }
+      else {
+	console.log('Error. Failed to parse response.\n', resp);
+	onError();
+      }
+    },
+    error: function(err) {
+      console.log('Error. ', err);
+      onError();
+    }
+  });
+}
+
 $(document).ready(function() {
   var lat, lon, api_url;
 
@@ -228,7 +249,6 @@ $(document).ready(function() {
     }
   });
 
-
   try {
     SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
     SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
@@ -249,7 +269,8 @@ $(document).ready(function() {
     console.log('Result: ' + speechResult);
     console.log('Confidence: ' + event.results[0][0].confidence);
 
-    var response = "Извините, не поняла, что значит " + speechResult + ". Меня можно спросить про погоду, тюленей, вальдшнепов и зомби.";
+    var response_default = "Извините, не поняла, что значит " + speechResult + ". Меня можно спросить про погоду, тюленей, вальдшнепов и зомби.";
+    var response = response_default
 
     speechResult = speechResult.toLowerCase();
     if(speechResult.includes("тюлен")) {
@@ -260,6 +281,27 @@ $(document).ready(function() {
       response = window.zombies;
     } else if(speechResult.includes("погод")) {
       response = window.weather;
+    } else if(speechResult.trim() != "") {
+      searchAnswer(
+	speechResult,
+	function(resp) {
+	  console.log(resp);
+	  if (resp.AbstractText) {
+	    response = resp.AbstractText;
+	  }
+	  else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
+	    response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
+	  }
+	  else {
+	    response = response_default;
+	  }
+	  window.speaksmth(response);
+	  console.log(response);
+	},
+	function() {
+	  window.speaksmth(response_default);
+	});
+      response = "";
     }
     window.speaksmth(response);
   }
