@@ -107,6 +107,11 @@ function speaksmth(text) {
     utterThis.pitch = 1.4;
     utterThis.lang = 'ru-RU';
     utterThis.voice = voice;
+
+    utterThis.addEventListener('end', function () {
+      console.log('speech end');
+      if (isAlwaysOn(stt));
+    });
     
     synth.speak(utterThis);
   } catch(e) {
@@ -358,11 +363,9 @@ $(document).ready(function() {
 	  }
 	  window.speaksmth(response);
 	  console.log(response);
-	  stt();
 	},
 	function() {
 	  window.speaksmth(response_default);
-	  stt();
 	});
       response = "";      
     } else if(speechResult.trim() != "") {
