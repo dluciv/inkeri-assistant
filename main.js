@@ -109,8 +109,10 @@ function speaksmth(text) {
     utterThis.voice = voice;
 
     utterThis.addEventListener('end', function () {
-      console.log('speech end');
-      if (isAlwaysOn(stt));
+      console.log('speaksmth: speech end');
+      if (isAlwaysOn) {
+	stt();
+      }
     });
     
     synth.speak(utterThis);
