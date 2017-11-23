@@ -422,6 +422,9 @@ $(document).ready(function() {
     if (response != "") {
       window.speaksmth(response);
     }
+    else if (isAlwaysOn) {
+      stt();
+    }
   }
 
   window.recognition.onspeechend = function() {
