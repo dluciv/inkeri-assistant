@@ -62,34 +62,39 @@ function tssss() {
 }
 
 function speaksmth(text) {
-  var synth = window.speechSynthesis;
-  var voices = synth.getVoices();
-  var ru_voices = voices.filter(function(v){
-    return v.lang.startsWith("ru");
-  });
-  var available_voices = ru_voices.length > 0 ? ru_voices : voices;
-  var voice = available_voices[0];
-  for(var v in available_voices){
-    if(available_voices[v].default)
-      voice = available_voices[v];
+  try {
+    var synth = window.speechSynthesis;
+    var voices = synth.getVoices();
+    var ru_voices = voices.filter(function(v){
+      return v.lang.startsWith("ru");
+    });
+    var available_voices = ru_voices.length > 0 ? ru_voices : voices;
+    var voice = available_voices[0];
+    for(var v in available_voices){
+      if(available_voices[v].default)
+        voice = available_voices[v];
+    }
+    /*
+    Bad idea to use cloud syntheser on Desktop — Google does
+    not render it to the end. 
+    var bestvoice = "Google русский";
+    for(var v in voices){
+      if(voices[v].name == bestvoice)
+        voice = voices[v];
+    }
+    */
+    
+    var utterThis = new SpeechSynthesisUtterance(text);
+    // utterThis.rate = 1.1;
+    utterThis.pitch = 1.4;
+    utterThis.lang = 'ru-RU';
+    utterThis.voice = voice;
+    
+    synth.speak(utterThis);
+  } catch(e) {
+    console.log(e);
+    t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());    
   }
-  /*
-  Bad idea to use cloud syntheser on Desktop — Google does
-  not render it to the end. 
-  var bestvoice = "Google русский";
-  for(var v in voices){
-    if(voices[v].name == bestvoice)
-      voice = voices[v];
-  }
-  */
-
-  var utterThis = new SpeechSynthesisUtterance(text);
-  // utterThis.rate = 1.1;
-  utterThis.pitch = 1.4;
-  utterThis.lang = 'ru-RU';
-  utterThis.voice = voice;
-
-  synth.speak(utterThis);
 };
 
 var seals_ok = "Ситуация с тюленями обнадёживающая.";
