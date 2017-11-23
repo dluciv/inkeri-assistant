@@ -250,8 +250,7 @@ var searchAnswer = function(text, onSuccess, onError) {
 }
 
 var clearSpeech = function(speechResult) {
-  return
-  speechResult
+  return speechResult
     .toLowerCase()
     .replace("инкери", "")
     .replace("расскажи", "")
@@ -261,7 +260,7 @@ var clearSpeech = function(speechResult) {
     .replace("что", "")
     .replace("кто", "")
     .replace("мне", "")
-    .replace("про")
+    .replace("про", "")
     .replace(" о ", " ")
     .trim();
 }
