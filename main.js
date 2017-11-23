@@ -411,9 +411,14 @@ $(document).ready(function() {
     console.log('onerror');
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
-    alert("Speech recognition error: " + event.error);
+    if (!isAlwaysOn) {
+      alert("Speech recognition error: " + event.error);
+    }
     t_ga('speech_recognition', 'recognition_error', event.error.toString());
     started = false;
+    if (isAlwaysOn) {
+      stt();
+    }
   }
 
   if (isAlwaysOn) {
