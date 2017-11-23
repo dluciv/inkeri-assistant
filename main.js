@@ -31,6 +31,21 @@ function t_ga(category, action, text){
   }
 }
 
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+var urlVars = getUrlVars();
+var isAlwaysOn = urlVars['on'] == 1;
+
 function declinateUnit(value, unit){
   var a = _units[unit];
   if(value < 0)
@@ -302,6 +317,29 @@ $(document).ready(function() {
       response = window.zombies;
     } else if(speechResult.includes("погод")) {
       response = window.weather;
+    } else if(isAlwaysOn && speechResult.includes("инкери")) {
+      var speechResultTrimmed = searchResult.toLowerCase().replace("инкери", "").replace("расскажи", "").replace("что такое", "").trim();
+      t_ga('speech_recognition', 'question', speechResultTrimmed);
+      searchAnswer(
+	speechResultTrimmed,
+	function(resp) {
+	  console.log(resp);
+	  if (resp.AbstractText) {
+	    response = resp.AbstractText;
+	  }
+	  else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
+	    response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
+	  }
+	  else {
+	    response = response_default;
+	  }
+	  window.speaksmth(response);
+	  console.log(response);
+	},
+	function() {
+	  window.speaksmth(response_default);
+	});
+      response = "";      
     } else if(speechResult.trim() != "") {
       t_ga('speech_recognition', 'unknown_phrase', speechResult);
       searchAnswer(
