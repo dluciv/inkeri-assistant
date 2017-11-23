@@ -207,6 +207,9 @@ function stt() {
     sttBtn.disabled = true;
     window.recognition.start();
   }
+  else {
+    console.log('stt: already started');
+  }
 };
 
 var searchAnswer = function(text, onSuccess, onError) {
@@ -321,7 +324,7 @@ $(document).ready(function() {
 
     speechResult = speechResult.toLowerCase().trim();
 
-    if (speechResult == prevSpeechResult) {
+    if (isAlwaysOn && speechResult == prevSpeechResult) {
       console.log('duplicate');
       return;
     }
