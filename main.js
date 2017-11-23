@@ -341,11 +341,11 @@ $(document).ready(function() {
 	  }
 	  window.speaksmth(response);
 	  console.log(response);
-	  window.recognition.start();
+	  stt();
 	},
 	function() {
 	  window.speaksmth(response_default);
-	  window.recognition.start();
+	  stt();
 	});
       response = "";      
     } else if(speechResult.trim() != "") {
@@ -391,6 +391,6 @@ $(document).ready(function() {
   }
 
   if (isAlwaysOn) {
-    window.recognition.start();
+    stt();
   }
 });
