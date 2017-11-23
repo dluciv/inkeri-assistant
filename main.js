@@ -199,6 +199,7 @@ function tell_status() {
 
 
 function stt() {
+  console.log('stt');
   var sttBtn = document.querySelector('#sttbtn');
   sttBtn.disabled = true;
   window.recognition.start();
@@ -323,7 +324,7 @@ $(document).ready(function() {
       response = window.weather;
     } else if(isAlwaysOn && (speechResult.includes("инкери") || speechResult.includes("inquiries"))) {
       console.log("question event");
-      var speechResultTrimmed = speechResult.toLowerCase().replace("инкери", "").replace("расскажи", "").replace("такое", "").replace("такой", "").replace("что", "").replace("кто", "").trim();
+      var speechResultTrimmed = speechResult.toLowerCase().replace("инкери", "").replace("расскажи", "").replace("такое", "").replace("такой", "").replace("что", "").replace("кто", "").replace("мне", "").trim();
       t_ga('speech_recognition', 'question', speechResultTrimmed);
       window.recognition.stop();
       searchAnswer(
@@ -378,12 +379,14 @@ $(document).ready(function() {
   }
 
   window.recognition.onspeechend = function() {
+    console.log('onspeechend');
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
     window.recognition.stop();
   }
 
   window.recognition.onerror = function(event) {
+    console.log('onerror');
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
     alert("Speech recognition error: " + event.error);
