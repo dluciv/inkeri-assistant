@@ -198,11 +198,15 @@ function tell_status() {
 };
 
 
+var started = false;
 function stt() {
-  console.log('stt');
-  var sttBtn = document.querySelector('#sttbtn');
-  sttBtn.disabled = true;
-  window.recognition.start();
+  if (!started) {
+    started = true;
+    console.log('stt');
+    var sttBtn = document.querySelector('#sttbtn');
+    sttBtn.disabled = true;
+    window.recognition.start();
+  }
 };
 
 var searchAnswer = function(text, onSuccess, onError) {
@@ -304,6 +308,8 @@ $(document).ready(function() {
   window.recognition.continuous = isAlwaysOn;
   // window.recognition.maxAlternatives = 0;
 
+  var prevSpeechResult = "";
+
   window.recognition.onresult = function(event) {
     var speechResult = event.results[0][0].transcript
     // diagnosticPara.textContent = 'Speech received: ' + speechResult + '.';
@@ -313,7 +319,14 @@ $(document).ready(function() {
     var response_default = "Извините, не знаю, что значит " + speechResult + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
     var response = response_default
 
-    speechResult = speechResult.toLowerCase();
+    speechResult = speechResult.toLowerCase().trim();
+
+    if (speechResult == prevSpeechResult) {
+      console.log('duplicate');
+      return;
+    }
+    prevSpeechResult = speechResult;
+    
     if(speechResult.includes("тюлен")) {
       response = window.seals_full;
     } else if(speechResult.includes("вальдшне")) {
@@ -383,6 +396,7 @@ $(document).ready(function() {
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
     window.recognition.stop();
+    started = false;
   }
 
   window.recognition.onerror = function(event) {
@@ -391,6 +405,7 @@ $(document).ready(function() {
     sttBtn.disabled = false;
     alert("Speech recognition error: " + event.error);
     t_ga('speech_recognition', 'recognition_error', event.error.toString());
+    started = false;
   }
 
   if (isAlwaysOn) {
