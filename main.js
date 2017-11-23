@@ -259,6 +259,14 @@ var clearSpeech = function(speechResult) {
     .trim();
 }
 
+var matchInkeri = function(speechResult) {
+  return speechResult.includes("инкери")
+    || speechResult.includes("inquiries")
+    || speechResult.includes("интере")
+    || speechResult.includes("интервью")
+    || speechResult.includes("интерьер");
+}
+
 $(document).ready(function() {
   var lat, lon, api_url;
 
@@ -362,7 +370,7 @@ $(document).ready(function() {
       response = window.zombies;
     } else if(speechResult.includes("погод")) {
       response = window.weather;
-    } else if(isAlwaysOn && (speechResult.includes("инкери") || speechResult.includes("inquiries"))) {
+    } else if(isAlwaysOn && matchInkeri(speechResult)) {
       console.log("question event");
       var speechResultTrimmed = clearSpeech(speechResult);
       t_ga('speech_recognition', 'question', speechResultTrimmed);
