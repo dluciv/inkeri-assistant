@@ -147,6 +147,7 @@ var getSealStatus = function(callback) {
 				},
 				error: function(err) {
 						console.log('err', err);
+						ga('send', 'event', 'news_retrieval', 'news_retrieval_error', err.toString());
 						callback(0, "");
 				}
 		})
@@ -179,11 +180,13 @@ var searchAnswer = function(text, onSuccess, onError) {
       }
       else {
 	console.log('Error. Failed to parse response.\n', resp);
+	ga('send', 'event', 'ddg_search', 'bad_response', resp.toString());
 	onError();
       }
     },
     error: function(err) {
       console.log('Error. ', err);
+      ga('send', 'event', 'ddg_search', 'failed_to_get_response', err.toString());
       onError();
     }
   });
@@ -255,6 +258,7 @@ $(document).ready(function() {
     SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
   } catch (e) {
     console.log(e);
+    ga('send', 'event', 'speech_recognition', 'no_browser_support', navigator.userAgent + " -----> " + e.toString());
     $("#sttbtn").remove();
   }
 
@@ -269,7 +273,7 @@ $(document).ready(function() {
     console.log('Result: ' + speechResult);
     console.log('Confidence: ' + event.results[0][0].confidence);
 
-    var response_default = "Извините, не поняла, что значит " + speechResult + ". Меня можно спросить про погоду, тюленей, вальдшнепов и зомби.";
+    var response_default = "Извините, знаю, что значит " + speechResult + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
     var response = response_default
 
     speechResult = speechResult.toLowerCase();
@@ -282,6 +286,7 @@ $(document).ready(function() {
     } else if(speechResult.includes("погод")) {
       response = window.weather;
     } else if(speechResult.trim() != "") {
+      ga('send', 'event', 'speech_recognition', 'unknown_phrase', speechResult);
       searchAnswer(
 	speechResult,
 	function(resp) {
@@ -316,6 +321,7 @@ $(document).ready(function() {
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
     alert("Speech recognition error: " + event.error);
+    ga('send', 'event', 'speech_recognition', 'recognition_error', event.error.toString());
   }
 
 
