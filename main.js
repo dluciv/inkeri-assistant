@@ -45,6 +45,9 @@ function getUrlVars()
 }
 var urlVars = getUrlVars();
 var isAlwaysOn = urlVars['on'] == 1;
+if (isAlwaysOn) {
+  console.log("isAlwaysOn");
+}
 
 function declinateUnit(value, unit){
   var a = _units[unit];
@@ -318,6 +321,7 @@ $(document).ready(function() {
     } else if(speechResult.includes("погод")) {
       response = window.weather;
     } else if(isAlwaysOn && speechResult.includes("инкери")) {
+      console.log("question event");
       var speechResultTrimmed = searchResult.toLowerCase().replace("инкери", "").replace("расскажи", "").replace("что такое", "").trim();
       t_ga('speech_recognition', 'question', speechResultTrimmed);
       searchAnswer(
