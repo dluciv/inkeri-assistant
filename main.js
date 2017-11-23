@@ -322,7 +322,7 @@ $(document).ready(function() {
       response = window.weather;
     } else if(isAlwaysOn && speechResult.includes("инкери")) {
       console.log("question event");
-      var speechResultTrimmed = searchResult.toLowerCase().replace("инкери", "").replace("расскажи", "").replace("что такое", "").trim();
+      var speechResultTrimmed = speechResult.toLowerCase().replace("инкери", "").replace("расскажи", "").replace("такое", "").replace("такой", "").replace("что", "").replace("кто", "").trim();
       t_ga('speech_recognition', 'question', speechResultTrimmed);
       searchAnswer(
 	speechResultTrimmed,
