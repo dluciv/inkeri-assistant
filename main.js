@@ -320,7 +320,7 @@ $(document).ready(function() {
       response = window.zombies;
     } else if(speechResult.includes("погод")) {
       response = window.weather;
-    } else if(isAlwaysOn && speechResult.includes("инкери")) {
+    } else if(isAlwaysOn && (speechResult.includes("инкери") || speechResult.includes("inquiries"))) {
       console.log("question event");
       var speechResultTrimmed = speechResult.toLowerCase().replace("инкери", "").replace("расскажи", "").replace("такое", "").replace("такой", "").replace("что", "").replace("кто", "").trim();
       t_ga('speech_recognition', 'question', speechResultTrimmed);
@@ -335,7 +335,7 @@ $(document).ready(function() {
 	    response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
 	  }
 	  else {
-	    response = response_default;
+	    response = "Извините, не знаю, что значит " + speechResultTrimmed + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
 	  }
 	  window.speaksmth(response);
 	  console.log(response);
