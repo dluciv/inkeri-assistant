@@ -202,6 +202,8 @@ var searchAnswer = function(text, onSuccess, onError) {
 }
 
 $(document).ready(function() {
+  ga('create', 'UA-110108110-1', 'auto');
+
   var lat, lon, api_url;
 
   var getweather = function(req, where) {
