@@ -19,9 +19,11 @@ for(var u in _units)
      _units[u].unshift(u);
 
 
-function t_ga(category, action, label){
+function t_ga(category, action, text){
   try {
-    ga('send', 'event', category, action, label);
+    ga('send', 'event', category, action, {
+      'dimension1': text
+    });
   } catch (e) {
     console.log("Analytics error: " + e.toString());
     console.log("Tried to send: " + category + ' ' + action + ' ' + label + ' ' + value);
