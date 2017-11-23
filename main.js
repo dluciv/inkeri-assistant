@@ -19,9 +19,9 @@ for(var u in _units)
      _units[u].unshift(u);
 
 
-function t_ga(category, action, label, value){
+function t_ga(category, action, label){
   try {
-    ga('send', 'event', category, action, label, value);
+    ga('send', 'event', category, action, label);
   } catch (e) {
     console.log("Analytics error: " + e.toString());
     console.log("Tried to send: " + category + ' ' + action + ' ' + label + ' ' + value);
@@ -156,7 +156,7 @@ var getSealStatus = function(callback) {
 				},
 				error: function(err) {
 						console.log('err', err);
-						t_ga('initialization', 'news_retrieval', 'news_retrieval_error', err.toString());
+						t_ga('initialization', 'news_retrieval_error', err.toString());
 						callback(0, "");
 				}
 		})
@@ -189,13 +189,13 @@ var searchAnswer = function(text, onSuccess, onError) {
       }
       else {
 	console.log('Error. Failed to parse response.\n', resp);
-	t_ga('search', 'ddg_search', 'bad_response', resp.toString());
+	t_ga('search', 'ddg_search_bad_response', resp.toString());
 	onError();
       }
     },
     error: function(err) {
       console.log('Error. ', err);
-      t_ga('search', 'ddg_search', 'failed_to_get_response', err.toString());
+      t_ga('search', 'ddg_search_failed_to_get_response', err.toString());
       onError();
     }
   });
@@ -267,7 +267,7 @@ $(document).ready(function() {
     SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
   } catch (e) {
     console.log(e);
-    t_ga('initialization', 'speech_recognition', 'no_browser_support', navigator.userAgent + " -----> " + e.toString());
+    t_ga('initialization', 'no_browser_support_for_speech_recognition', navigator.userAgent + " -----> " + e.toString());
     $("#sttbtn").remove();
   }
 
@@ -295,7 +295,7 @@ $(document).ready(function() {
     } else if(speechResult.includes("погод")) {
       response = window.weather;
     } else if(speechResult.trim() != "") {
-      t_ga('speech_recognition', 'recognition_miss', 'unknown_phrase', speechResult);
+      t_ga('speech_recognition', 'unknown_phrase', speechResult);
       searchAnswer(
 	speechResult,
 	function(resp) {
@@ -330,7 +330,7 @@ $(document).ready(function() {
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
     alert("Speech recognition error: " + event.error);
-    t_ga('initialization', 'speech_recognition', 'recognition_error', event.error.toString());
+    t_ga('speech_recognition', 'recognition_error', event.error.toString());
   }
 
 
