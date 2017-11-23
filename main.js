@@ -242,6 +242,23 @@ var searchAnswer = function(text, onSuccess, onError) {
   });
 }
 
+var clearSpeech = function(speechResult) {
+  return
+  speechResult
+    .toLowerCase()
+    .replace("инкери", "")
+    .replace("расскажи", "")
+    .replace("такое", "")
+    .replace("такой", "")
+    .replace("что-нибудь", "")
+    .replace("что", "")
+    .replace("кто", "")
+    .replace("мне", "")
+    .replace("про")
+    .replace(" о ", " ")
+    .trim();
+}
+
 $(document).ready(function() {
   var lat, lon, api_url;
 
@@ -347,7 +364,7 @@ $(document).ready(function() {
       response = window.weather;
     } else if(isAlwaysOn && (speechResult.includes("инкери") || speechResult.includes("inquiries"))) {
       console.log("question event");
-      var speechResultTrimmed = speechResult.toLowerCase().replace("инкери", "").replace("расскажи", "").replace("такое", "").replace("такой", "").replace("что", "").replace("кто", "").replace("мне", "").trim();
+      var speechResultTrimmed = clearSpeech(speechResult);
       t_ga('speech_recognition', 'question', speechResultTrimmed);
       window.recognition.stop();
       searchAnswer(
