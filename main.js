@@ -21,8 +21,9 @@ for(var u in _units)
 
 function t_ga(category, action, text){
   try {
-    ga('send', 'event', category, action, {
-      'dimension1': text
+    gtag('event', action, {
+      'event_category': category,
+      'event_label': text
     });
   } catch (e) {
     console.log("Analytics error: " + e.toString());
@@ -204,8 +205,6 @@ var searchAnswer = function(text, onSuccess, onError) {
 }
 
 $(document).ready(function() {
-  ga('create', 'UA-110108110-1', 'auto');
-
   var lat, lon, api_url;
 
   var getweather = function(req, where) {
@@ -336,6 +335,5 @@ $(document).ready(function() {
     alert("Speech recognition error: " + event.error);
     t_ga('speech_recognition', 'recognition_error', event.error.toString());
   }
-
-
+  t_ga('initialization', 'finished', 'OK');
 });
