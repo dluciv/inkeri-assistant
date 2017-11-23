@@ -159,7 +159,7 @@ var getSealStatus = function(callback) {
 				},
 				error: function(err) {
 						console.log('err', err);
-						t_ga('initialization', 'news_retrieval_error', err.toString());
+						t_ga('news', 'news_retrieval_error', err.toString());
 						callback(0, "");
 				}
 		})
@@ -192,13 +192,13 @@ var searchAnswer = function(text, onSuccess, onError) {
       }
       else {
 	console.log('Error. Failed to parse response.\n', resp);
-	t_ga('search', 'ddg_search_bad_response', resp.toString());
+	t_ga('duckduckgo', 'bad_response', resp.toString());
 	onError();
       }
     },
     error: function(err) {
       console.log('Error. ', err);
-      t_ga('search', 'ddg_search_failed_to_get_response', err.toString());
+      t_ga('duckduckgo', 'failed_to_get_response', err.toString());
       onError();
     }
   });
@@ -270,7 +270,7 @@ $(document).ready(function() {
     SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
   } catch (e) {
     console.log(e);
-    t_ga('initialization', 'no_browser_support_for_speech_recognition', navigator.userAgent + " -----> " + e.toString());
+    t_ga('speech_recognition', 'no_browser_support', navigator.userAgent + " -----> " + e.toString());
     $("#sttbtn").remove();
   }
 
@@ -335,5 +335,4 @@ $(document).ready(function() {
     alert("Speech recognition error: " + event.error);
     t_ga('speech_recognition', 'recognition_error', event.error.toString());
   }
-  t_ga('initialization', 'finished', 'OK');
 });
