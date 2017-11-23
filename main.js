@@ -23,7 +23,7 @@ function t_ga(p1, p2, p3, p4, p5){
   try {
     ga(p1, p2, p3, p4, p5);
   } catch (e) {
-    console.log("Analyticas error: " + e.toString());
+    console.log("Analytics error: " + e.toString());
     console.log("Tried to send: " + p1 + ' ' + p2 + ' ' + p3 + ' ' + p4 + ' ' + p5);
   }
 }
