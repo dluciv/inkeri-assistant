@@ -31,6 +31,24 @@ function t_ga(category, action, text){
   }
 }
 
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+var urlVars = getUrlVars();
+var isAlwaysOn = urlVars['on'] == 1;
+if (isAlwaysOn) {
+  console.log("isAlwaysOn");
+}
+
 function declinateUnit(value, unit){
   var a = _units[unit];
   if(value < 0)
@@ -61,7 +79,9 @@ function tssss() {
   window.speechSynthesis.cancel();
 }
 
+var speaking = false;
 function speaksmth(text) {
+  speaking = true;
   try {
     var synth = window.speechSynthesis;
     var voices = synth.getVoices();
@@ -89,11 +109,20 @@ function speaksmth(text) {
     utterThis.pitch = 1.4;
     utterThis.lang = 'ru-RU';
     utterThis.voice = voice;
+
+    utterThis.addEventListener('end', function () {
+      console.log('speaksmth: speech end');
+      if (isAlwaysOn) {
+	stt();
+      }
+      speaking = false;
+    });
     
     synth.speak(utterThis);
   } catch(e) {
     console.log(e);
-    t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());    
+    t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());
+    speaking = false;
   }
 };
 
@@ -180,11 +209,24 @@ function tell_status() {
 };
 
 
+var started = false;
 function stt() {
-  var sttBtn = document.querySelector('#sttbtn');
-  sttBtn.disabled = true;
-  window.recognition.start();
+  if (!started) {
+    console.log('stt');
+    var sttBtn = document.querySelector('#sttbtn');
+    sttBtn.disabled = true;
+    window.recognition.start();
+  }
+  else {
+    console.log('stt: already started');
+  }
 };
+function stp() {
+  console.log('stp');
+  var sttBtn = document.querySelector('#sttbtn');
+  sttBtn.disabled = false;
+  window.recognition.stop();
+}
 
 var searchAnswer = function(text, onSuccess, onError) {
   $.ajax({
@@ -207,6 +249,33 @@ var searchAnswer = function(text, onSuccess, onError) {
       onError();
     }
   });
+}
+
+var clearSpeech = function(speechResult) {
+  return speechResult
+    .toLowerCase()
+    .replace("инкери", "")
+    .replace("расскажи", "")
+    .replace("такое", "")
+    .replace("такой", "")
+    .replace("что-нибудь", "")
+    .replace("что", "")
+    .replace("кто", "")
+    .replace("мне", "")
+    .replace("про", "")
+    .replace(" о ", " ")
+    .trim();
+}
+
+var matchInkeri = function(speechResult) {
+  return speechResult.includes("инкери")
+    || speechResult.includes("inquiries")
+    || speechResult.includes("интере")
+    || speechResult.includes("интервью")
+    || speechResult.includes("интерьер")
+    || speechResult.includes("intellij")
+    || speechResult.includes("игры")
+    || speechResult.includes("inferi");
 }
 
 $(document).ready(function() {
@@ -282,7 +351,10 @@ $(document).ready(function() {
   window.recognition = new SpeechRecognition();
   window.recognition.lang = 'ru-RU';
   window.recognition.interimResults = false;
+  window.recognition.continuous = isAlwaysOn;
   // window.recognition.maxAlternatives = 0;
+
+  var prevSpeechResult = "";
 
   window.recognition.onresult = function(event) {
     var speechResult = event.results[0][0].transcript
@@ -293,7 +365,14 @@ $(document).ready(function() {
     var response_default = "Извините, не знаю, что значит " + speechResult + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
     var response = response_default
 
-    speechResult = speechResult.toLowerCase();
+    speechResult = speechResult.toLowerCase().trim();
+
+    if (isAlwaysOn && speechResult == prevSpeechResult) {
+      console.log('duplicate');
+      return;
+    }
+    prevSpeechResult = speechResult;
+    
     if(speechResult.includes("тюлен")) {
       response = window.seals_full;
     } else if(speechResult.includes("вальдшне")) {
@@ -302,6 +381,31 @@ $(document).ready(function() {
       response = window.zombies;
     } else if(speechResult.includes("погод")) {
       response = window.weather;
+    } else if(isAlwaysOn && matchInkeri(speechResult)) {
+      console.log("question event");
+      var speechResultTrimmed = clearSpeech(speechResult);
+      t_ga('speech_recognition', 'question', speechResultTrimmed);
+      stp();
+      searchAnswer(
+	speechResultTrimmed,
+	function(resp) {
+	  console.log(resp);
+	  if (resp.AbstractText) {
+	    response = resp.AbstractText;
+	  }
+	  else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
+	    response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
+	  }
+	  else {
+	    response = "Извините, не знаю, что значит " + speechResultTrimmed + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
+	  }
+	  window.speaksmth(response);
+	  console.log(response);
+	},
+	function() {
+	  window.speaksmth(response_default);
+	});
+      response = "";      
     } else if(speechResult.trim() != "") {
       t_ga('speech_recognition', 'unknown_phrase', speechResult);
       searchAnswer(
@@ -325,19 +429,60 @@ $(document).ready(function() {
 	});
       response = "";
     }
-    window.speaksmth(response);
+
+    if (response != "") {
+      stp();
+      window.speaksmth(response);
+    }
+    else if (isAlwaysOn) {
+      stt();
+    }
   }
 
   window.recognition.onspeechend = function() {
-    var sttBtn = document.querySelector('#sttbtn');
-    sttBtn.disabled = false;
-    window.recognition.stop();
+    console.log('onspeechend');
+    if (!isAlwaysOn) {
+      stp();
+    }
   }
 
   window.recognition.onerror = function(event) {
+    console.log('onerror');
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
-    alert("Speech recognition error: " + event.error);
+    if (!isAlwaysOn) {
+      alert("Speech recognition error: " + event.error);
+    }
     t_ga('speech_recognition', 'recognition_error', event.error.toString());
+    started = false;
+    if (isAlwaysOn) {
+      stt();
+    }
+  }
+
+  window.recognition.onstart = function(event) {
+    console.log('onstart');
+    started = true;
+  };
+  window.recognition.onend = function(event) {
+    console.log('onend');
+    started = false;
+    if (isAlwaysOn) {
+      setTimeout(function() {
+	if (!speaking) {
+	  stt();
+	}
+      }, 500);
+    }
+  };
+
+  setInterval(function() {
+    if (isAlwaysOn && !speaking && !started) {
+      stt();
+    }
+  }, 5000);
+
+  if (isAlwaysOn) {
+    stt();
   }
 });
