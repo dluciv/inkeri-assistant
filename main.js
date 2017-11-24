@@ -436,10 +436,8 @@ $(document).ready(function() {
 
   window.recognition.onspeechend = function() {
     console.log('onspeechend');
-    stp();
-    if (isAlwaysOn) {
-      // setTimeout(stt, 500);
-      stt();
+    if (!isAlwaysOn) {
+      stp();
     }
   }
 
