@@ -182,7 +182,10 @@ var getSealStatus = function(callback) {
 						// console.log('ok', data);
 						var parsed = $.parseXML(data);
 						measure_seal_background(parsed);
-						var lastPostHtml = $(parsed).find('item description').first().text();
+						var posts = $(parsed).find('item');
+						var postdate = (post) => new Date($(post).find('pubDate').text()).getTime();
+						var sortedPosts = posts.sort((p1, p2) => postdate(p2) - postdate(p1))
+						var lastPostHtml = $(sortedPosts).first().find('description').first().text();
 						var lastPostText = $(lastPostHtml).text();
 						console.log(lastPostText);
 						if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
