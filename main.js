@@ -190,7 +190,7 @@ var getSealStatus = function(callback) {
 						console.log(lastPostText);
 						if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
 								var moodInfo = analyze(lastPostText);
-								// console.log(moodInfo);
+								console.log('mood:', moodInfo);
 								callback(moodInfo.score, lastPostText);
 						}
 				},
