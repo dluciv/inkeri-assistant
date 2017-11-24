@@ -274,7 +274,8 @@ var matchInkeri = function(speechResult) {
     || speechResult.includes("интервью")
     || speechResult.includes("интерьер")
     || speechResult.includes("intellij")
-    || speechResult.includes("игры");
+    || speechResult.includes("игры")
+    || speechResult.includes("inferi");
 }
 
 $(document).ready(function() {
