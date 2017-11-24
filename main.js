@@ -79,7 +79,9 @@ function tssss() {
   window.speechSynthesis.cancel();
 }
 
+var speaking = false;
 function speaksmth(text) {
+  speaking = true;
   try {
     var synth = window.speechSynthesis;
     var voices = synth.getVoices();
@@ -113,12 +115,14 @@ function speaksmth(text) {
       if (isAlwaysOn) {
 	stt();
       }
+      speaking = false;
     });
     
     synth.speak(utterThis);
   } catch(e) {
     console.log(e);
-    t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());    
+    t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());
+    speaking = false;
   }
 };
 
@@ -461,6 +465,13 @@ $(document).ready(function() {
   window.recognition.onend = function(event) {
     console.log('onend');
     started = false;
+    if (isAlwaysOn) {
+      setTimeout(function() {
+	if (!speaking) {
+	  stt();
+	}
+      }, 500);
+    }
   };
 
   if (isAlwaysOn) {
