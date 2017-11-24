@@ -438,7 +438,8 @@ $(document).ready(function() {
     console.log('onspeechend');
     stp();
     if (isAlwaysOn) {
-      setTimeout(stt, 500);
+      // setTimeout(stt, 500);
+      stt();
     }
   }
 
