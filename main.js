@@ -208,7 +208,6 @@ function tell_status() {
 var started = false;
 function stt() {
   if (!started) {
-    started = true;
     console.log('stt');
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = true;
@@ -223,7 +222,6 @@ function stp() {
   var sttBtn = document.querySelector('#sttbtn');
   sttBtn.disabled = false;
   window.recognition.stop();
-  started = false;
 }
 
 var searchAnswer = function(text, onSuccess, onError) {
@@ -270,7 +268,8 @@ var matchInkeri = function(speechResult) {
     || speechResult.includes("inquiries")
     || speechResult.includes("интере")
     || speechResult.includes("интервью")
-    || speechResult.includes("интерьер");
+    || speechResult.includes("интерьер")
+    || speechResult.includes("intellij");
 }
 
 $(document).ready(function() {
@@ -454,6 +453,15 @@ $(document).ready(function() {
       stt();
     }
   }
+
+  window.recognition.onstart = function(event) {
+    console.log('onstart');
+    started = true;
+  };
+  window.recognition.onend = function(event) {
+    console.log('onend');
+    started = false;
+  };
 
   if (isAlwaysOn) {
     stt();
