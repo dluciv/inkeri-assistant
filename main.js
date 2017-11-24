@@ -474,6 +474,12 @@ $(document).ready(function() {
     }
   };
 
+  setInterval(function() {
+    if (isAlwaysOn && !speaking && !started) {
+      stt();
+    }
+  }, 5000);
+
   if (isAlwaysOn) {
     stt();
   }
