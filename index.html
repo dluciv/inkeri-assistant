@@ -1,6 +1,10 @@
 <!DOCTYPE HTML>
 <html lang="ru">
 <head>
+   <!-- https://stackoverflow.com/a/4723302/539470 -->
+   <script>
+   if (location.protocol != 'https:' && location.hostname != 'localhost') location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+   </script>
    <!-- Global site tag (gtag.js) - Google Analytics -->
    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-110108110-1"></script>
    <script>
