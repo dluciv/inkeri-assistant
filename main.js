@@ -426,6 +426,7 @@ $(document).ready(function() {
     }
 
     if (response != "") {
+      stp();
       window.speaksmth(response);
     }
     else if (isAlwaysOn) {
@@ -435,8 +436,9 @@ $(document).ready(function() {
 
   window.recognition.onspeechend = function() {
     console.log('onspeechend');
-    if (!isAlwaysOn) {
-      stp();
+    stp();
+    if (isAlwaysOn) {
+      setTimeout(stt, 500);
     }
   }
 
