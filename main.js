@@ -273,7 +273,8 @@ var matchInkeri = function(speechResult) {
     || speechResult.includes("интере")
     || speechResult.includes("интервью")
     || speechResult.includes("интерьер")
-    || speechResult.includes("intellij");
+    || speechResult.includes("intellij")
+    || speechResult.includes("игры");
 }
 
 $(document).ready(function() {
