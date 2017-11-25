@@ -9,6 +9,7 @@ var SpeechRecognitionEvent = null;
 window.weather = "";
 
 function t_ga(category, action, text){
+  console.log("Analytics: " + category + ' ' + action + ' ' + label + ' ' + value);
   try {
     gtag('event', action, {
       'event_category': category,
@@ -16,7 +17,6 @@ function t_ga(category, action, text){
     });
   } catch (e) {
     console.log("Analytics error: " + e.toString());
-    console.log("Tried to send: " + category + ' ' + action + ' ' + label + ' ' + value);
   }
 }
 
