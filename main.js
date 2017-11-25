@@ -9,7 +9,7 @@ var SpeechRecognitionEvent = null;
 window.weather = "";
 
 function t_ga(category, action, text){
-  console.log("Analytics: " + category + ' ' + action + ' ' + label + ' ' + value);
+  console.log(`Analytics: ${category} / ${action} / ${text}`);
   try {
     gtag('event', action, {
       'event_category': category,
