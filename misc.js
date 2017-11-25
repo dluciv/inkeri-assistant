@@ -35,3 +35,27 @@ export function declinateUnit(value, unit){
       return a[1];
   }
 }
+
+// Exponential weighted average
+export function calculateWeightedAverage(now, moments, half_life, notolder) {
+  var events = moments.slice();
+  events.sort();
+  var total_weighted_events = 0.0;
+
+  for(var i = 0; i < events.length; ++i) {
+    var e = events[i];
+    var d = (now - e) / 1000.0;
+    if(d > notolder)
+      continue;
+    var weight = Math.pow(2, -d/half_life);
+    total_weighted_events += weight;
+  }
+
+  // total_weighted_seconds = \sum_{d = 0}^{analysis_period} 2^{-d/half_life} =
+  // \frac{1 - q^n}{1-q}, q^{half_life} = 1/2.
+
+  var q = Math.pow(2, -1/half_life);
+  var total_weighted_time = (1 - Math.pow(q, notolder)) / (1 - q);
+
+  return total_weighted_events / total_weighted_time;
+}

@@ -1,4 +1,4 @@
-import { declinateUnit } from './misc.js';
+import { declinateUnit, calculateWeightedAverage } from './misc.js';
 
 const seals_ok = "Ситуация с тюленями обнадёживающая.";
 const seals_not_ok = "Ситуация с тюленями угрожающая.";
@@ -13,30 +13,6 @@ var seal_back_value = " ";
 var seal_status_text = "";
 var seal_text = "";
 
-var get_ewma = function(now, moments, half_life, notolder) {
-
-  var events = moments.slice();
-  events.sort();
-  var total_weighted_events = 0.0;
-
-  for(var i = 0; i < events.length; ++i) {
-    var e = events[i];
-    var d = (now - e) / 1000.0;
-    if(d > notolder)
-      continue;
-    var weight = Math.pow(2, -d/half_life);
-    total_weighted_events += weight;
-  }
-
-  // total_weighted_seconds = \sum_{d = 0}^{analysis_period} 2^{-d/half_life} =
-  // \frac{1 - q^n}{1-q}, q^{half_life} = 1/2.
-
-  var q = Math.pow(2, -1/half_life);
-  var total_weighted_time = (1 - Math.pow(q, notolder)) / (1 - q);
-
-  return total_weighted_events / total_weighted_time;
-}
-
 var measure_seal_background = function(parsed) {
   var now = new Date().getTime();
   var pubdates = [];
@@ -46,7 +22,7 @@ var measure_seal_background = function(parsed) {
 
   var halflife = 60*60*24*1; // 1 сутки - период полураспада события
   var ap = 31536000 / 12; // анализируем за месяц
-  var tulsec = get_ewma(now, pubdates, halflife, ap);
+  var tulsec = calculateWeightedAverage(now, pubdates, halflife, ap);
   var micro_tul_hour = Math.round(tulsec * 1e6 * 3600);
   seal_back_value = seal_back_value_template({
     micro_tul_hour : micro_tul_hour,
