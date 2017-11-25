@@ -1,23 +1,13 @@
-﻿window.owmAPIkey = "65b3dc1574aadec85e6638331e30b380"; // dluciv@gmail.com
+﻿import { loadSealStatus, getSealStatusText, getSealText, getSealBackValue } from './seals.js';
+import { declinateUnit } from './misc.js';
+
+window.owmAPIkey = "65b3dc1574aadec85e6638331e30b380"; // dluciv@gmail.com
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
 var SpeechRecognitionEvent = null;
 
 window.weather = "";
-
-var _units = {
-  "градус" : ["градуса", "градусов"],
-  "метр" : ["метра", "метров"],
-  "миллиметр" : ["миллиметра", "миллиметров"],
-  "процент": ["процента", "процентов"],
-  "тюлень": ["тюленя", "тюленей"],
-};
-
-for(var u in _units)
-  if(_units.hasOwnProperty(u))
-     _units[u].unshift(u);
-
 
 function t_ga(category, action, text){
   try {
@@ -49,33 +39,7 @@ if (isAlwaysOn) {
   console.log("isAlwaysOn");
 }
 
-function declinateUnit(value, unit){
-  var a = _units[unit];
-  if(value < 0)
-    value = -value;
-  var lastdigit = value % 10;
-  var lasttwodigits = value % 100;
-  if(lasttwodigits >= 10 && lasttwodigits <= 20)
-    lastdigit = 5;
-
-  switch(lastdigit){
-    case 0:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
-      return a[2];
-    case 1:
-      return a[0];
-    case 2:
-    case 3:
-    case 4:
-      return a[1];
-  }
-}
-
-function tssss() {
+window.tssss = function() {
   window.speechSynthesis.cancel();
 }
 
@@ -126,94 +90,17 @@ function speaksmth(text) {
   }
 };
 
-var seals_ok = "Ситуация с тюленями обнадёживающая.";
-var seals_not_ok = "Ситуация с тюленями угрожающая.";
-var seals_default = "Ситуация с тюленями спокойная.";
-var seals_full_prefix = "Центр реабилитации морских млекопитающих Ленинградской области сообщает. ";
-window.seals = seals_default;
-window.seals_full = seals_default;
-var seals_url = 'https://matrix.dluciv.name/vksealrescuerss';
-
-var get_ewma = function(now, moments, half_life, notolder) {
-
-  var events = moments.slice();
-  events.sort();
-  var total_weighted_events = 0.0;
-
-  for(var i = 0; i < events.length; ++i) {
-    var e = events[i];
-    var d = (now - e) / 1000.0;
-    if(d > notolder)
-      continue;
-    var weight = Math.pow(2, -d/half_life);
-    total_weighted_events += weight;
-  }
-
-  // total_weighted_seconds = \sum_{d = 0}^{analysis_period} 2^{-d/half_life} =
-  // \frac{1 - q^n}{1-q}, q^{half_life} = 1/2.
-
-  var q = Math.pow(2, -1/half_life);
-  var total_weighted_time = (1 - Math.pow(q, notolder)) / (1 - q);
-
-  return total_weighted_events / total_weighted_time;
-}
-
-window.seal_back_value = " ";
-
-var measure_seal_background = function(parsed) {
-  var now = new Date().getTime();
-  var pubdates = [];
-  $(parsed).find('item pubDate').each(function(){
-    pubdates.push(new Date($(this).text()).getTime());
-  });
-
-  var halflife = 60*60*24*1; // 1 сутки - период полураспада события
-  var ap = 31536000 / 12; // анализируем за месяц
-  var tulsec = get_ewma(now, pubdates, halflife, ap);
-  var micro_tul_hour = Math.round(tulsec * 1e6 * 3600);
-  window.seal_back_value = " Фон — " + micro_tul_hour + " микро" + declinateUnit(micro_tul_hour, "тюлень") + " в час. ";
-}
-
-var getSealStatus = function(callback) {
-		$.ajax({
-				method: 'GET',
-				url: seals_url,
-				success: function(data) {
-						// console.log('ok', data);
-						var parsed = $.parseXML(data);
-						measure_seal_background(parsed);
-						var posts = $(parsed).find('item');
-						var postdate = (post) => new Date($(post).find('pubDate').text()).getTime();
-						var sortedPosts = posts.sort((p1, p2) => postdate(p2) - postdate(p1))
-						var lastPostHtml = $(sortedPosts).first().find('description').first().text();
-						var lastPostText = $(lastPostHtml).text();
-						console.log(lastPostText);
-						if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
-								var moodInfo = analyze(lastPostText);
-								console.log('mood:', moodInfo);
-								callback(moodInfo.score, lastPostText);
-						}
-				},
-				error: function(err) {
-						console.log('err', err);
-						t_ga('news', 'news_retrieval_error', err.toString());
-						callback(0, "");
-				}
-		})
-}
-
 window.woodcocks = "Ситуация с ва́льдшнепами спокойная.";
 var zp = 800 + Math.round(Math.random()*50);
 window.zombies = "Вероятность зомби-атаки — " + zp + " на миллион. Это меньше статистической погрешности.";
 
-
-function tell_status() {
-  window.speaksmth("Привет! Говорит И́нкери Норпа Лехтокурпа. " + window.weather + ' ' +  window.seals + ' ' + window.seal_back_value + ' ' +  window.woodcocks + ' ' + window.zombies + ' ' + "Спасибо, всего доброго!");
+window.tell_status = function() {
+  speaksmth("Привет! Говорит И́нкери Норпа Лехтокурпа. " + window.weather + ' ' +  getSealStatusText() + ' ' + getSealBackValue() + ' ' +  window.woodcocks + ' ' + window.zombies + ' ' + "Спасибо, всего доброго!");
 };
 
 
 var started = false;
-function stt() {
+window.stt = function() {
   if (!started) {
     console.log('stt');
     var sttBtn = document.querySelector('#sttbtn');
@@ -331,15 +218,7 @@ $(document).ready(function() {
       getweather(api_url, "в И́нгрии");
   }
 
-  getSealStatus(function(status, text) {
-    window.seals = (status >= 0) ? seals_ok : seals_not_ok;
-    if (text.trim()) {
-      window.seals_full = window.seals + window.seal_back_value + " " + seals_full_prefix + text;
-    }
-    else {
-      window.seals_full = window.seals;
-    }
-  });
+  loadSealStatus();
 
   try {
     SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
@@ -377,7 +256,7 @@ $(document).ready(function() {
     prevSpeechResult = speechResult;
     
     if(speechResult.includes("тюлен")) {
-      response = window.seals_full;
+      response = getSealText();
     } else if(speechResult.includes("вальдшне")) {
       response = window.woodcocks;
     } else if(speechResult.includes("зомби")) {
@@ -402,11 +281,11 @@ $(document).ready(function() {
 	  else {
 	    response = "Извините, не знаю, что значит " + speechResultTrimmed + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
 	  }
-	  window.speaksmth(response);
+	  speaksmth(response);
 	  console.log(response);
 	},
 	function() {
-	  window.speaksmth(response_default);
+	  speaksmth(response_default);
 	});
       response = "";      
     } else if(speechResult.trim() != "") {
@@ -424,18 +303,18 @@ $(document).ready(function() {
 	  else {
 	    response = response_default;
 	  }
-	  window.speaksmth(response);
+	  speaksmth(response);
 	  console.log(response);
 	},
 	function() {
-	  window.speaksmth(response_default);
+	  speaksmth(response_default);
 	});
       response = "";
     }
 
     if (response != "") {
       stp();
-      window.speaksmth(response);
+      speaksmth(response);
     }
     else if (isAlwaysOn) {
       stt();
