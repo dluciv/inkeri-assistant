@@ -59,3 +59,18 @@ export function calculateWeightedAverage(now, moments, half_life, notolder) {
 
   return total_weighted_events / total_weighted_time;
 }
+
+// Google analytics helper
+export function t_ga(category, action, text){
+  console.log(`Analytics: ${category} / ${action} / ${text}`);
+  try {
+    gtag('event', action, {
+      'event_category': category,
+      'event_label': text
+    });
+  } catch (e) {
+    console.log("Analytics error: " + e.toString());
+  }
+}
+
+export var response_default_template = _.template("Извините, не знаю, что значит <%= speechResult %>. Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.");

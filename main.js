@@ -1,24 +1,13 @@
 ﻿import { loadSealStatus, getSealStatusText, getSealText, getSealBackValue } from './seals.js';
 import { loadWeather } from './weather.js';
-import { declinateUnit } from './misc.js';
+import { search } from './search.js';
+import { declinateUnit, t_ga, response_default_template } from './misc.js';
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
 var SpeechRecognitionEvent = null;
 
 window.weather = "";
-
-function t_ga(category, action, text){
-  console.log(`Analytics: ${category} / ${action} / ${text}`);
-  try {
-    gtag('event', action, {
-      'event_category': category,
-      'event_label': text
-    });
-  } catch (e) {
-    console.log("Analytics error: " + e.toString());
-  }
-}
 
 function log_for_user(text){
   t_ga('log_for_user', 'text', text);
@@ -122,45 +111,6 @@ function stp() {
   window.recognition.stop();
 }
 
-var searchAnswer = function(text, onSuccess, onError) {
-  $.ajax({
-    url: 'https://api.duckduckgo.com/?q=' + encodeURIComponent(text) + '&format=json',
-    method: 'GET',
-    success: function(resp) {
-      var data = JSON.parse(resp);
-      if (data) {
-	onSuccess(data);
-      }
-      else {
-	console.log('Error. Failed to parse response.\n', resp);
-	t_ga('duckduckgo', 'bad_response', resp.toString());
-	onError();
-      }
-    },
-    error: function(err) {
-      console.log('Error. ', err);
-      t_ga('duckduckgo', 'failed_to_get_response', err.toString());
-      onError();
-    }
-  });
-}
-
-var clearSpeech = function(speechResult) {
-  return speechResult
-    .toLowerCase()
-    .replace("инкери", "")
-    .replace("расскажи", "")
-    .replace("такое", "")
-    .replace("такой", "")
-    .replace("что-нибудь", "")
-    .replace("что", "")
-    .replace("кто", "")
-    .replace("мне", "")
-    .replace("про", "")
-    .replace(" о ", " ")
-    .trim();
-}
-
 var matchInkeri = function(speechResult) {
   return speechResult.includes("инкери")
     || speechResult.includes("inquiries")
@@ -202,8 +152,7 @@ $(document).ready(function() {
     console.log('Result: ' + speechResult);
     console.log('Confidence: ' + event.results[0][0].confidence);
 
-    var response_default = "Извините, не знаю, что значит " + speechResult + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
-    var response = response_default
+    var response = response_default_template({ speechResult : speechResult });
 
     speechResult = speechResult.toLowerCase().trim();
 
@@ -222,50 +171,21 @@ $(document).ready(function() {
     } else if(speechResult.includes("погод")) {
       response = window.weather;
     } else if(isAlwaysOn && matchInkeri(speechResult)) {
-      console.log("question event");
-      var speechResultTrimmed = clearSpeech(speechResult);
-      t_ga('speech_recognition', 'question', speechResultTrimmed);
       stp();
-      searchAnswer(
-	speechResultTrimmed,
-	function(resp) {
-	  console.log(resp);
-	  if (resp.AbstractText) {
-	    response = resp.AbstractText;
-	  }
-	  else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
-	    response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
-	  }
-	  else {
-	    response = "Извините, не знаю, что значит " + speechResultTrimmed + ". Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.";
-	  }
+      search(
+	speechResult,
+	(response) => {
 	  speaksmth(response);
 	  console.log(response);
-	},
-	function() {
-	  speaksmth(response_default);
 	});
       response = "";      
     } else if(speechResult.trim() != "") {
       t_ga('speech_recognition', 'unknown_phrase', speechResult);
-      searchAnswer(
+      search(
 	speechResult,
-	function(resp) {
-	  console.log(resp);
-	  if (resp.AbstractText) {
-	    response = resp.AbstractText;
-	  }
-	  else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
-	    response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
-	  }
-	  else {
-	    response = response_default;
-	  }
+	(response) => {
 	  speaksmth(response);
 	  console.log(response);
-	},
-	function() {
-	  speaksmth(response_default);
 	});
       response = "";
     }
