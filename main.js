@@ -20,6 +20,11 @@ function t_ga(category, action, text){
   }
 }
 
+function log_for_user(text){
+  t_ga('log_for_user', 'text', text);
+  $('#log_for_user_text')[0].innerHTML += text + '<br/>\n';
+}
+
 function getUrlVars()
 {
     var vars = [], hash;
@@ -179,6 +184,7 @@ $(document).ready(function() {
   } catch (e) {
     console.log(e);
     t_ga('speech_recognition', 'no_browser_support', navigator.userAgent + " -----> " + e.toString());
+    log_for_user("Ваш браузер не поддерживает распознавание речи. Пожалуйста откройте страницу в Google Chrome.");
     $("#sttbtn").remove();
   }
 
