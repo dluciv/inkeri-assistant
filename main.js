@@ -1,4 +1,5 @@
-﻿import { loadSealStatus, getSealStatusText, getSealText, getSealBackValue } from './seals.js';
+﻿import { STATES, set as setState, get as getState, is as isState } from './states.js';
+import { loadSealStatus, getSealStatusText, getSealText, getSealBackValue } from './seals.js';
 import { loadWeather } from './weather.js';
 import { search } from './search.js';
 import { declinateUnit, t_ga, response_default_template } from './misc.js';
@@ -36,9 +37,8 @@ window.tssss = function() {
   window.speechSynthesis.cancel();
 }
 
-var speaking = false;
 function speaksmth(text) {
-  speaking = true;
+  setState(STATES.speaking);
   try {
     var synth = window.speechSynthesis;
     var voices = synth.getVoices();
@@ -72,14 +72,14 @@ function speaksmth(text) {
       if (isAlwaysOn) {
 	stt();
       }
-      speaking = false;
+      setState(STATES.initial);
     });
     
     synth.speak(utterThis);
   } catch(e) {
     console.log(e);
     t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());
-    speaking = false;
+    setState(STATES.initial);
   }
 };
 
@@ -91,10 +91,8 @@ window.tell_status = function() {
   speaksmth("Привет! Говорит И́нкери Норпа Лехтокурпа. " + window.weather + ' ' +  getSealStatusText() + ' ' + getSealBackValue() + ' ' +  window.woodcocks + ' ' + window.zombies + ' ' + "Спасибо, всего доброго!");
 };
 
-
-var started = false;
 window.stt = function() {
-  if (!started) {
+  if (!isState(STATES.listening)) {
     console.log('stt');
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = true;
@@ -123,6 +121,8 @@ var matchInkeri = function(speechResult) {
 }
 
 $(document).ready(function() {
+
+  setState(STATES.initial);
 
   loadWeather((w) => window.weather = w);
   loadSealStatus();
@@ -214,7 +214,7 @@ $(document).ready(function() {
       alert("Speech recognition error: " + event.error);
     }
     t_ga('speech_recognition', 'recognition_error', event.error.toString());
-    started = false;
+    setState(STATES.initial);
     if (isAlwaysOn) {
       stt();
     }
@@ -222,14 +222,14 @@ $(document).ready(function() {
 
   window.recognition.onstart = function(event) {
     console.log('onstart');
-    started = true;
+    setState(STATES.listening);
   };
   window.recognition.onend = function(event) {
     console.log('onend');
-    started = false;
+    setState(STATES.initial);
     if (isAlwaysOn) {
       setTimeout(function() {
-	if (!speaking) {
+	if (!isState(STATES.speaking)) {
 	  stt();
 	}
       }, 500);
@@ -237,7 +237,7 @@ $(document).ready(function() {
   };
 
   setInterval(function() {
-    if (isAlwaysOn && !speaking && !started) {
+    if (isAlwaysOn && !isState(STATES.speaking) && !isState(STATES.listening)) {
       stt();
     }
   }, 5000);
