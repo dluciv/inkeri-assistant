@@ -52,13 +52,6 @@ if (recognition) {
     setState(STATES.thinking, speechResult);
   }
 
-  // recognition.onspeechend = function() {
-  //   console.log('onspeechend');
-  //   if (!isAlwaysOn) {
-  //     stp();
-  //   }
-  // }
-
   recognition.onerror = function(event) {
     console.log('onerror');
     setState(STATES.initial);
@@ -67,12 +60,7 @@ if (recognition) {
     }
     t_ga('speech_recognition', 'recognition_error', event.error.toString());
   }
-
-  // recognition.onstart = function(event) {
-  //   console.log('onstart');
-  //   setState(STATES.listening);
-  // };
-
+  
   recognition.onend = function(event) {
     if (isState(STATES.listening)) {
       console.log('onend');
