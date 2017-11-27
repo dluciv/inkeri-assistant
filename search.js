@@ -1,4 +1,4 @@
-import { response_default_template, t_ga } from './misc.js';
+import { response_default_template, t_ga, inkeris } from './misc.js';
 
 var searchAnswer = function(text, onSuccess, onError) {
   $.ajax({
@@ -24,9 +24,11 @@ var searchAnswer = function(text, onSuccess, onError) {
 }
 
 var clearSpeech = function(speechResult) {
+  _.each(inkeris, (ink) => {
+    speechResult = speechResult.replace(ink, "");
+  });
   return speechResult
     .toLowerCase()
-    .replace("инкери", "")
     .replace("расскажи", "")
     .replace("такое", "")
     .replace("такой", "")
