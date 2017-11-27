@@ -74,8 +74,10 @@ if (recognition) {
   // };
 
   recognition.onend = function(event) {
-    console.log('onend');
-    setState(STATES.initial);
+    if (isState(STATES.listening)) {
+      console.log('onend');
+      setState(STATES.initial);
+    }
   };
 }
 
@@ -103,6 +105,7 @@ addStateHandler(STATES.listening, {
 
 addStateHandler(STATES.thinking, {
   onAfter: (stOld, stNew, speechResult) => {
+    var response;
     if(speechResult.includes("тюлен")) {
       response = getSealText();
     } else if(speechResult.includes("вальдшне")) {
