@@ -112,7 +112,6 @@ addStateHandler(STATES.thinking, {
     } else if(speechResult.includes("погод")) {
       response = window.weather;
     } else if(isAlwaysOn && matchInkeri(speechResult)) {
-      stp();
       search(
 	speechResult,
 	(response) => {
@@ -176,8 +175,10 @@ addStateHandler(STATES.speaking, {
         voice = voices[v];
 	}
       */
-      
-      var utterThis = new SpeechSynthesisUtterance(textToSpeak);
+
+      // window, not var because onend does not trigger otherwise
+      // https://bugs.chromium.org/p/chromium/issues/detail?id=509488#c11
+      window.utterThis = new SpeechSynthesisUtterance(textToSpeak);
       // utterThis.rate = 1.1;
       utterThis.pitch = 1.4;
       utterThis.lang = 'ru-RU';
@@ -185,13 +186,11 @@ addStateHandler(STATES.speaking, {
 
       utterThis.addEventListener('end', function () {
 	console.log('speaksmth: speech end');
-	if (isAlwaysOn) {
-	  stt();
-	}
 	setState(STATES.initial);
       });
       
       synth.speak(utterThis);
+      setTimeout
     } catch(e) {
       console.log(e);
       t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());
