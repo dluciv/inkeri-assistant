@@ -33,10 +33,10 @@ var clearSpeech = function(speechResult) {
     .replace("такое", "")
     .replace("такой", "")
     .replace("что-нибудь", "")
-    .replace("что", "")
-    .replace("кто", "")
-    .replace("мне", "")
-    .replace("про", "")
+    .replace("что ", " ")
+    .replace("кто ", " ")
+    .replace("мне ", " ")
+    .replace(" про ", " ")
     .replace(" о ", " ")
     .trim();
 }
