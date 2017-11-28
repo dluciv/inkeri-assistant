@@ -236,7 +236,7 @@ var stopListening = function() {
 }
 
 var tssss = function() {
-  if (isState(STATES.speaking)) {
+  if (isState(STATES.speaking) || isState(STATES.listening)) {
     setState(STATES.initial);
   }
   else {
