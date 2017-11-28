@@ -98,11 +98,11 @@ addStateHandler(STATES.thinking, {
     if(speechResult.includes("тюлен")) {
       response = getSealText();
     } else if(speechResult.includes("вальдшне")) {
-      response = window.woodcocks;
+      response = woodcocks;
     } else if(speechResult.includes("зомби")) {
-      response = window.zombies;
+      response = zombies;
     } else if(speechResult.includes("погод")) {
-      response = window.weather;
+      response = weather;
     } else if(speechResult.includes("крипер") || speechResult.includes("страш")) {
       loadKriperStory((response) => {
   console.log(response);
@@ -244,9 +244,16 @@ var tssss = function() {
   }
 }
 
+var status_template = _.template("Привет! Говорит И́нкери Норпа Лехтокурпа. <%= weather %> <%= seals %> <%= seals_back %> <%= woodcocks %> <%= zombies %> Спасибо, всего доброго!");
 var tell_status = function() {
   if (isState(STATES.initial)) {
-    var text = "Привет! Говорит И́нкери Норпа Лехтокурпа. " + window.weather + ' ' +  getSealStatusText() + ' ' + getSealBackValue() + ' ' +  window.woodcocks + ' ' + window.zombies + ' ' + "Спасибо, всего доброго!";
+    var text = status_template({
+      weather    : weather,
+      seals      : getSealStatusText(),
+      seals_back : getSealBackValue(),
+      woodcocks  : woodcocks,
+      zombies    : zombies
+    });
     setState(STATES.speaking, text);
   }
   else {
@@ -259,10 +266,10 @@ if (isAlwaysOn) {
   console.log("isAlwaysOn");
 }
 
-window.weather = "";
-window.woodcocks = "Ситуация с ва́льдшнепами спокойная.";
+var weather = "";
+var woodcocks = "Ситуация с ва́льдшнепами спокойная.";
 var zp = 800 + Math.round(Math.random()*50);
-window.zombies = "Вероятность зомби-атаки — " + zp + " на миллион. Это меньше статистической погрешности.";
+var zombies = "Вероятность зомби-атаки — " + zp + " на миллион. Это меньше статистической погрешности.";
 
 $(function() {
   $('#statusBtn').click((e) => {
@@ -281,7 +288,7 @@ $(function() {
 
 setState(STATES.initial);
 
-loadWeather((w) => window.weather = w);
+loadWeather((w) => weather = w);
 loadSealStatus();
 
 if (isAlwaysOn) {
