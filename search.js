@@ -29,7 +29,7 @@ var searchFull = function(text, onSuccess, onError) {
 
 var searchAnswer = function(text, onSuccess, onError) {
   $.ajax({
-    url: 'https://api.duckduckgo.com/?q=' + encodeURIComponent(text) + '&format=json',
+    url: 'https://cors-anywhere.herokuapp.com/https://api.duckduckgo.com/?q=' + encodeURIComponent(text) + '&format=json',
     method: 'GET',
     success: function(resp) {
       var data = JSON.parse(resp);
@@ -64,6 +64,7 @@ var clearSpeech = function(speechResult) {
     .replace("мне ", " ")
     .replace(" про ", " ")
     .replace(" о ", " ")
+    .replace("какая ", " ")
     .trim();
 }
 
