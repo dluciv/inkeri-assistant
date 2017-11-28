@@ -93,7 +93,7 @@ export function getUrlVars()
     return vars;
 }
 
-export const inkeris = [ "инкери", "inquiries", "интере", "интервью", "интерьер", "intellij", "игры", "inferi", "intel" ];
+export const inkeris = [ "инкери", "inquiries", "интере", "интервью", "интерьер", "intellij", "игры", "inferi", "intel", "inquiry" ];
 export function matchInkeri(speechResult) {
   return _.some(inkeris, (ink) => speechResult.includes(ink));
 }
