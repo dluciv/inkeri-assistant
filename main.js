@@ -105,41 +105,41 @@ addStateHandler(STATES.thinking, {
       response = window.weather;
     } else if(speechResult.includes("крипер") || speechResult.includes("страш")) {
       loadKriperStory((response) => {
-	console.log(response);
-	if (response.trim() != "") {
-	  setState(STATES.speaking, response);
-	}
-	else {
-	  setState(STATES.initial);
-	}
+  console.log(response);
+  if (response.trim() != "") {
+    setState(STATES.speaking, response);
+  }
+  else {
+    setState(STATES.initial);
+  }
       });
       return;
     } else if(isAlwaysOn && matchInkeri(speechResult)) {
       search(
-	speechResult,
-	(response) => {
-	  console.log(response);
-	  if (response.trim() != "") {
-	    setState(STATES.speaking, response);
-	  }
-	  else {
-	    setState(STATES.initial);
-	  }
-	});
+  speechResult,
+  (response) => {
+    console.log(response);
+    if (response.trim() != "") {
+      setState(STATES.speaking, response);
+    }
+    else {
+      setState(STATES.initial);
+    }
+  });
       return;      
     } else if(speechResult != "") {
       t_ga('speech_recognition', 'unknown_phrase', speechResult);
       search(
-	speechResult,
-	(response) => {
-	  console.log(response);
-	  if (response.trim() != "") {
-	    setState(STATES.speaking, response);
-	  }
-	  else {
-	    setState(STATES.initial);
-	  }
-	});
+  speechResult,
+  (response) => {
+    console.log(response);
+    if (response.trim() != "") {
+      setState(STATES.speaking, response);
+    }
+    else {
+      setState(STATES.initial);
+    }
+  });
       return;
     }
     else {
@@ -161,22 +161,22 @@ addStateHandler(STATES.speaking, {
       var synth = window.speechSynthesis;
       var voices = synth.getVoices();
       var ru_voices = voices.filter(function(v){
-	return v.lang.startsWith("ru");
+  return v.lang.startsWith("ru");
       });
       var available_voices = ru_voices.length > 0 ? ru_voices : voices;
       var voice = available_voices[0];
       for(var v in available_voices){
-	if(available_voices[v].default)
+  if(available_voices[v].default)
           voice = available_voices[v];
       }
       /*
-	Bad idea to use cloud syntheser on Desktop — Google does
-	not render it to the end. 
-	var bestvoice = "Google русский";
-	for(var v in voices){
-	if(voices[v].name == bestvoice)
+  Bad idea to use cloud syntheser on Desktop — Google does
+  not render it to the end. 
+  var bestvoice = "Google русский";
+  for(var v in voices){
+  if(voices[v].name == bestvoice)
         voice = voices[v];
-	}
+  }
       */
 
       // window, not var because onend does not trigger otherwise
@@ -188,8 +188,8 @@ addStateHandler(STATES.speaking, {
       utterThis.voice = voice;
 
       utterThis.addEventListener('end', function () {
-	console.log('speaksmth: speech end');
-	setState(STATES.initial);
+  console.log('speaksmth: speech end');
+  setState(STATES.initial);
       });
       
       synth.speak(utterThis);
@@ -209,9 +209,9 @@ addStateHandler(STATES.initial, {
   onAfter : (stOld, stNew) => {
     if (isAlwaysOn) {
       setTimeout(() => {
-	if (isState(STATES.initial)) {
-	  startListening();
-	}
+  if (isState(STATES.initial)) {
+    startListening();
+  }
       }, 500);
     }
   }
