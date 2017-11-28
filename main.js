@@ -2,6 +2,7 @@
 import { loadSealStatus, getSealStatusText, getSealText, getSealBackValue } from './seals.js';
 import { loadWeather } from './weather.js';
 import { search } from './search.js';
+import { loadKriperStory } from './kriper.js';
 import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, matchInkeri } from './misc.js';
 
 var SpeechRecognition = null;
@@ -102,6 +103,17 @@ addStateHandler(STATES.thinking, {
       response = window.zombies;
     } else if(speechResult.includes("погод")) {
       response = window.weather;
+    } else if(speechResult.includes("крипер") || speechResult.includes("страш")) {
+      loadKriperStory((response) => {
+	console.log(response);
+	if (response.trim() != "") {
+	  setState(STATES.speaking, response);
+	}
+	else {
+	  setState(STATES.initial);
+	}
+      });
+      return;
     } else if(isAlwaysOn && matchInkeri(speechResult)) {
       search(
 	speechResult,

@@ -93,13 +93,7 @@ export function getUrlVars()
     return vars;
 }
 
+export const inkeris = [ "инкери", "inquiries", "интере", "интервью", "интерьер", "intellij", "игры", "inferi", "intel", "inquiry" ];
 export function matchInkeri(speechResult) {
-  return speechResult.includes("инкери")
-    || speechResult.includes("inquiries")
-    || speechResult.includes("интере")
-    || speechResult.includes("интервью")
-    || speechResult.includes("интерьер")
-    || speechResult.includes("intellij")
-    || speechResult.includes("игры")
-    || speechResult.includes("inferi");
+  return _.some(inkeris, (ink) => speechResult.includes(ink));
 }
