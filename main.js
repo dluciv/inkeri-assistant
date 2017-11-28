@@ -116,30 +116,30 @@ addStateHandler(STATES.thinking, {
       return;
     } else if(isAlwaysOn && matchInkeri(speechResult)) {
       search(
-  speechResult,
-  (response) => {
-    console.log(response);
-    if (response.trim() != "") {
-      setState(STATES.speaking, response);
-    }
-    else {
-      setState(STATES.initial);
-    }
-  });
+        speechResult,
+        (response) => {
+          console.log(response);
+          if (response.trim() != "") {
+            setState(STATES.speaking, response);
+          }
+          else {
+            setState(STATES.initial);
+          }
+        });
       return;      
     } else if(speechResult != "") {
       t_ga('speech_recognition', 'unknown_phrase', speechResult);
       search(
-  speechResult,
-  (response) => {
-    console.log(response);
-    if (response.trim() != "") {
-      setState(STATES.speaking, response);
-    }
-    else {
-      setState(STATES.initial);
-    }
-  });
+        speechResult,
+        (response) => {
+          console.log(response);
+          if (response.trim() != "") {
+            setState(STATES.speaking, response);
+          }
+          else {
+            setState(STATES.initial);
+          }
+        });
       return;
     }
     else {
