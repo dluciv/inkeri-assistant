@@ -74,3 +74,32 @@ export function t_ga(category, action, text){
 }
 
 export var response_default_template = _.template("Извините, не знаю, что значит <%= speechResult %>. Но вообще меня можно спросить много про что, например про погоду, тюленей, вальдшнепов и зомби.");
+
+export function log_for_user(text){
+  t_ga('log_for_user', 'text', text);
+  $('#log_for_user_text')[0].innerHTML += text + '<br/>\n';
+}
+
+export function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+
+export function matchInkeri(speechResult) {
+  return speechResult.includes("инкери")
+    || speechResult.includes("inquiries")
+    || speechResult.includes("интере")
+    || speechResult.includes("интервью")
+    || speechResult.includes("интерьер")
+    || speechResult.includes("intellij")
+    || speechResult.includes("игры")
+    || speechResult.includes("inferi");
+}
