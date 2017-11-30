@@ -9,7 +9,7 @@ var searchFull = function(text, onSuccess, onError) {
       let data = resp.response;
       let longtext = resp.longtext;
       if (longtext && longtext.length > data.length) {
-	onSuccess(longtext);
+        onSuccess(longtext);
       } else if (data) {
         t_ga('duckduckgo', 'bad_or_small_full_search_long_response', resp.href);
         onSuccess(data);
