@@ -1,5 +1,29 @@
 import { response_default_template, t_ga, inkeris } from './misc.js';
 
+var searchFull = function(text, onSuccess, onError) {
+  $.ajax({
+    url: `https://inkeri-api.herokuapp.com/short-thought?q=${encodeURIComponent(text)}`,
+    method: 'GET',
+    dataType: 'json',
+    success: function(resp) {
+      let data = resp.response;
+      if (data) {
+	onSuccess(data);
+      }
+      else {
+        console.log('Error. Failed to parse response.\n', resp);
+        t_ga('duckduckgo', 'bad_full_search_response', resp.toString());
+        onError();
+      }
+    },
+    error: function(err) {
+      console.log('Error. ', err);
+      t_ga('duckduckgo', 'failed_to_get_response', err.toString());
+      onError();
+    }
+  });
+}
+
 var searchAnswer = function(text, onSuccess, onError) {
   $.ajax({
     url: 'https://api.duckduckgo.com/?q=' + encodeURIComponent(text) + '&format=json',
@@ -10,9 +34,9 @@ var searchAnswer = function(text, onSuccess, onError) {
 	onSuccess(data);
       }
       else {
-	console.log('Error. Failed to parse response.\n', resp);
-	t_ga('duckduckgo', 'bad_response', resp.toString());
-	onError();
+        console.log('Error. Failed to parse response.\n', resp);
+        t_ga('duckduckgo', 'bad_response', resp.toString());
+        onError();
       }
     },
     error: function(err) {
@@ -51,16 +75,20 @@ export function search(speechResult, callback) {
       // console.log(resp);
       var response;
       if (resp.AbstractText) {
-	response = resp.AbstractText;
+	let response = resp.AbstractText;
+        callback(response);
       }
       else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
-	response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
+	let response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
+        callback(response);
       }
       else {
-	response = response_default_template({ speechResult : speechResultTrimmed });
+        searchFull(speechResultTrimmed, (resp) => {
+          callback(resp);
+        }, () => {
+          callback(response_default_template({ speechResult : speechResult }));
+        });
       }
-      
-      callback(response);
     },
     function() {
       callback(response_default_template({ speechResult : speechResult }));
