@@ -8,20 +8,20 @@ var searchFull = function(text, onSuccess, onError) {
     success: function(resp) {
       let data = resp.response;
       let longtext = resp.longtext;
-      if (longtext && longtext.length > data.length) {
+      if (longtext && longtext.length >= data.length) {
         onSuccess(longtext);
       } else if (data) {
-        t_ga('duckduckgo', 'bad_or_small_full_search_long_response', resp.href);
+        t_ga('search', 'bad_or_small_full_search_long_response', resp.href);
         onSuccess(data);
       } else {
         console.log('Error. Failed to parse response.\n', resp);
-        t_ga('duckduckgo', 'bad_full_search_response', resp.toString());
+        t_ga('search', 'bad_full_search_response', resp.toString());
         onError();
       }
     },
     error: function(err) {
       console.log('Error. ', err);
-      t_ga('duckduckgo', 'failed_to_get_response', err.toString());
+      t_ga('search', 'failed_to_get_response', err.toString());
       onError();
     }
   });
@@ -37,13 +37,13 @@ var searchAnswer = function(text, onSuccess, onError) {
 	onSuccess(data);
       } else {
         console.log('Error. Failed to parse response.\n', resp);
-        t_ga('duckduckgo', 'bad_response', resp.toString());
+        t_ga('search', 'bad_response', resp.toString());
         onError();
       }
     },
     error: function(err) {
       console.log('Error. ', err);
-      t_ga('duckduckgo', 'failed_to_get_response', err.toString());
+      t_ga('search', 'failed_to_get_response', err.toString());
       onError();
     }
   });

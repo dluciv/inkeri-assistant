@@ -23,13 +23,13 @@ var loadKriperStory = function(callback) {
     method: 'GET',
     success: function(resp, result, xhr) {
       var finalUrl = getFinalUrl(xhr);
-      t_ga('duckduckgo', 'kriper_redirect', finalUrl);
+      t_ga('search', 'kriper_redirect', finalUrl);
       var text = $('#content .text', resp).text();
       callback(text);
     },
     error: function(err) {
       console.log('Error. ', err);
-      t_ga('duckduckgo', 'failed_to_get_response', err.toString());
+      t_ga('search', 'failed_to_get_response', err.toString());
       callback("Ничего не нашла");
     }
   });
