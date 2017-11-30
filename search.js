@@ -7,10 +7,13 @@ var searchFull = function(text, onSuccess, onError) {
     dataType: 'json',
     success: function(resp) {
       let data = resp.response;
-      if (data) {
-	onSuccess(data);
-      }
-      else {
+      let longtext = resp.longtext;
+      if (longtext) {
+	onSuccess(longtext);
+      } else if (data) {
+        t_ga('duckduckgo', 'bad_full_search_long_response', resp.href);
+        onSuccess(data);
+      } else {
         console.log('Error. Failed to parse response.\n', resp);
         t_ga('duckduckgo', 'bad_full_search_response', resp.toString());
         onError();
@@ -32,8 +35,7 @@ var searchAnswer = function(text, onSuccess, onError) {
       var data = JSON.parse(resp);
       if (data) {
 	onSuccess(data);
-      }
-      else {
+      } else {
         console.log('Error. Failed to parse response.\n', resp);
         t_ga('duckduckgo', 'bad_response', resp.toString());
         onError();
