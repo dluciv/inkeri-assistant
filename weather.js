@@ -1,4 +1,4 @@
-import { declinateUnit } from './misc.js';
+import { t_ga, declinateUnit } from './misc.js';
 
 const owmAPIkey = "65b3dc1574aadec85e6638331e30b380"; // dluciv@gmail.com
 const owmAPIroot = `https://api.openweathermap.org/data/2.5/weather?appid=${owmAPIkey}&units=metric`;

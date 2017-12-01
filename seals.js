@@ -1,4 +1,4 @@
-import { declinateUnit, calculateWeightedAverage } from './misc.js';
+import { t_ga, declinateUnit, calculateWeightedAverage } from './misc.js';
 
 const seals_ok = "Ситуация с тюленями обнадёживающая.";
 const seals_not_ok = "Ситуация с тюленями угрожающая.";
