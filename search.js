@@ -122,6 +122,4 @@ var search = function (speechResult, callback) {
     });
 }
 
-window.srch = search;
-
 export { search };
