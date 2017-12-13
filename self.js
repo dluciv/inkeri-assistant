@@ -1,4 +1,4 @@
-const REMEMBER_PROBABILITY = 0.1;
+const REMEMBER_PROBABILITY = 0.2;
 
 var randomSpeech = function(onSuccess, onError) {
   $.ajax({
