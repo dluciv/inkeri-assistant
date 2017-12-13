@@ -1,8 +1,9 @@
 const STATES = {
-  initial   : "st_initial",
-  speaking  : "st_speaking",
-  listening : "st_listening",
-  thinking  : "st_thinking"
+  initial     : "st_initial",
+  speaking    : "st_speaking",
+  listening   : "st_listening",
+  thinking    : "st_thinking",
+  remembering : "st_remembering"
 }
 
 var currentState = "undefined";

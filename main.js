@@ -3,6 +3,7 @@ import { loadSealStatus, getSealStatusText, getSealText, getSealBackValue } from
 import { loadWeather } from './weather.js';
 import { search } from './search.js';
 import { loadKriperStory } from './kriper.js';
+import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
 import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, matchInkeri } from './misc.js';
 
 var SpeechRecognition = null;
@@ -188,8 +189,8 @@ addStateHandler(STATES.speaking, {
       utterThis.voice = voice;
 
       utterThis.addEventListener('end', function () {
-  console.log('speaksmth: speech end');
-  setState(STATES.initial);
+        console.log('speaksmth: speech end');
+        setState(STATES.initial);
       });
       
       synth.speak(utterThis);
@@ -209,11 +210,29 @@ addStateHandler(STATES.initial, {
   onAfter : (stOld, stNew) => {
     if (isAlwaysOn) {
       setTimeout(() => {
-  if (isState(STATES.initial)) {
-    startListening();
-  }
+        if (isState(STATES.initial)) {
+          if (Math.random() < REMEMBER_PROBABILITY) {
+            startRemembering()
+          }
+          else {
+            startListening();
+          }
+        }
       }, 500);
     }
+  }
+});
+
+addStateHandler(STATES.remembering, {
+  onAfter: (stOld, stNew) => {
+    randomSpeech(
+      (resp) => {
+        setState(STATES.speaking, resp);
+      },
+      () => {
+        setState(STATES.initial);
+      }
+    );
   }
 });
 
@@ -232,6 +251,15 @@ var stopListening = function() {
   }
   else {
     console.log('stopListening: wrong state');
+  }
+}
+
+var startRemembering = function() {
+  if (isState(STATES.initial)) {
+    setState(STATES.remembering);
+  }
+  else {
+    console.log('startRemembering: wromg state');
   }
 }
 
