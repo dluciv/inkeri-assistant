@@ -27,6 +27,24 @@ var searchFull = function(text, onSuccess, onError) {
   });
 }
 
+var storeAnswer = function(question, answer, engine) {
+  $.ajax({
+    url: 'https://inkeri-api.herokuapp.com/store-answer?format=json',
+    method: 'GET',
+    data: {
+      q: question,
+      a: answer,
+      e: engine
+    },
+    success: function(resp) {
+      console.log('search: storeAnswer: saved.', resp);
+    },
+    error: function(err) {
+      console.log('search: storeAnswer: error:', err);
+    }
+  });
+}
+
 var searchAnswer = function(text, onSuccess, onError) {
   $.ajax({
     url: 'https://cors-anywhere.herokuapp.com/https://api.duckduckgo.com/?q=' + encodeURIComponent(text) + '&format=json',
@@ -34,7 +52,7 @@ var searchAnswer = function(text, onSuccess, onError) {
     success: function(resp) {
       var data = JSON.parse(resp);
       if (data) {
-	onSuccess(data);
+        onSuccess(data);
       } else {
         console.log('Error. Failed to parse response.\n', resp);
         t_ga('search', 'bad_response', resp.toString());
@@ -68,7 +86,7 @@ var clearSpeech = function(speechResult) {
     .trim();
 }
 
-export function search(speechResult, callback) {
+var search = function (speechResult, callback) {
   var speechResultTrimmed = clearSpeech(speechResult);
   t_ga('speech_recognition', 'question', speechResultTrimmed);
 
@@ -78,22 +96,32 @@ export function search(speechResult, callback) {
       // console.log(resp);
       var response;
       if (resp.AbstractText) {
-	let response = resp.AbstractText;
+        let response = resp.AbstractText;
+        storeAnswer(speechResultTrimmed, response, 'duckduckgo');
         callback(response);
       }
       else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
-	let response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
+        let response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
+        storeAnswer(speechResultTrimmed, response, 'duckduckgo');
         callback(response);
       }
       else {
         searchFull(speechResultTrimmed, (resp) => {
           callback(resp);
         }, () => {
-          callback(response_default_template({ speechResult : speechResult }));
+          var response = response_default_template({ speechResult : speechResult });
+          storeAnswer(speechResultTrimmed, response, 'constant');
+          callback(response);
         });
       }
     },
     function() {
-      callback(response_default_template({ speechResult : speechResult }));
+      var response = response_default_template({ speechResult : speechResult });
+      storeAnswer(speechResultTrimmed, response, 'constant');
+      callback(response);
     });
 }
+
+window.srch = search;
+
+export { search };
