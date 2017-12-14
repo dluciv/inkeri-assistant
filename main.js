@@ -84,7 +84,7 @@ if (recognition2) {
     // console.log('recognition2.onresult: event: ', event);
     var speechResults = _.flatMap(event.results, (res) => _.map(res, (res2) => [ res2.transcript.toLowerCase() , res2.confidence ]));
     console.log('recognition2.onresult: results: ', speechResults);
-    var stopWordMatched = _.some(speechResults, (sr) => _.some(STOP_WORDS, (sw) => (sw == sr[0] || sr[0].includes(sw + " "))));
+    var stopWordMatched = _.some(speechResults, (sr) => _.some(STOP_WORDS, (sw) => (sw == sr[0] || sr[0].includes(sw))));
     if (stopWordMatched) {
       console.log('stop word matched');
       tssss();
