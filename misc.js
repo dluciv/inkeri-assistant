@@ -94,6 +94,7 @@ export function getUrlVars()
 }
 
 export const inkeris = [ "инкери", "inquiries", "интере", "интервью", "интерьер", "intellij", "игры", "inferi", "intel", "inquiry" ];
+export const STOP_WORDS = ["стоп", "топ", "стой", "хватит", "молчи", "спасибо", "top"];
 export function matchInkeri(speechResult) {
   return _.some(inkeris, (ink) => speechResult.includes(ink));
 }

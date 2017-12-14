@@ -4,17 +4,19 @@ import { loadWeather } from './weather.js';
 import { search } from './search.js';
 import { loadKriperStory } from './kriper.js';
 import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
-import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, matchInkeri } from './misc.js';
+import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, matchInkeri, STOP_WORDS } from './misc.js';
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
 var SpeechRecognitionEvent = null;
 var recognition = null;
+var recognition2 = null;
 try {
   SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
   SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
   SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
   recognition = new SpeechRecognition();
+  recognition2 = new SpeechRecognition();
 } catch (e) {
   console.log(e);
   t_ga('speech_recognition', 'no_browser_support', navigator.userAgent + " -----> " + e.toString());
@@ -69,6 +71,44 @@ if (recognition) {
       setState(STATES.initial);
     }
   };
+}
+
+if (recognition2) {
+  recognition2.lang = 'ru-RU';
+  recognition2.interimResults = true;
+  recognition2.continuous = true;
+  // recognition.maxAlternatives = 0;
+}
+if (recognition2) {
+  recognition2.onresult = function(event) {
+    console.log('recognition2.onresult: event: ', event);
+    var speechResults = _.flatMap(event.results, (res) => _.map(res, (res2) => [ res2.transcript.toLowerCase() , res2.confidence ]));
+    console.log('recognition2.onresult: results: ', speechResults);
+    var stopWordMatched = _.some(speechResults, (sr) => _.some(STOP_WORDS, (sw) => (sw == sr[0] || sr[0].includes(sw + " "))));
+    if (stopWordMatched) {
+      console.log('stop word matched');
+      tssss();
+    }
+    
+  }
+
+  recognition2.onerror = function(error) {
+    console.log('recognition2.onerror: error: ', error);
+    setTimeout(function() {
+      if (isState(STATES.speaking)) {
+        recognition2.start();
+      }
+    }, 500);
+  }
+
+  recognition2.onend = function(event) {
+    console.log('recognition2.onend: event: ', event);
+    setTimeout(function() {
+      if (isState(STATES.speaking)) {
+        recognition2.start();
+      }
+    }, 500);
+  }
 }
 
 addStateHandler(STATES.listening, {
@@ -162,12 +202,12 @@ addStateHandler(STATES.speaking, {
       var synth = window.speechSynthesis;
       var voices = synth.getVoices();
       var ru_voices = voices.filter(function(v){
-  return v.lang.startsWith("ru");
+        return v.lang.startsWith("ru");
       });
       var available_voices = ru_voices.length > 0 ? ru_voices : voices;
       var voice = available_voices[0];
       for(var v in available_voices){
-  if(available_voices[v].default)
+        if(available_voices[v].default)
           voice = available_voices[v];
       }
       /*
@@ -194,15 +234,17 @@ addStateHandler(STATES.speaking, {
       });
       
       synth.speak(utterThis);
-      setTimeout
     } catch(e) {
       console.log(e);
       t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());
       setState(STATES.initial);
     }
+
+    recognition2.start();
   },
   onExitBefore: (stOld, stNew) => {
     speechSynthesis.cancel();
+    recognition2.stop();
   }
 });
 
