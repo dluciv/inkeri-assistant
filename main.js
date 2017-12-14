@@ -81,7 +81,7 @@ if (recognition2) {
 }
 if (recognition2) {
   recognition2.onresult = function(event) {
-    console.log('recognition2.onresult: event: ', event);
+    // console.log('recognition2.onresult: event: ', event);
     var speechResults = _.flatMap(event.results, (res) => _.map(res, (res2) => [ res2.transcript.toLowerCase() , res2.confidence ]));
     console.log('recognition2.onresult: results: ', speechResults);
     var stopWordMatched = _.some(speechResults, (sr) => _.some(STOP_WORDS, (sw) => (sw == sr[0] || sr[0].includes(sw + " "))));
@@ -96,7 +96,10 @@ if (recognition2) {
     console.log('recognition2.onerror: error: ', error);
     setTimeout(function() {
       if (isState(STATES.speaking)) {
-        recognition2.start();
+        try {
+          recognition2.start();
+        }
+        catch (e) {}
       }
     }, 500);
   }
@@ -105,7 +108,10 @@ if (recognition2) {
     console.log('recognition2.onend: event: ', event);
     setTimeout(function() {
       if (isState(STATES.speaking)) {
-        recognition2.start();
+        try {
+          recognition2.start();
+        }
+        catch (e) {}
       }
     }, 500);
   }
