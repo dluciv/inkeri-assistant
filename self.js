@@ -1,3 +1,5 @@
+import { t_ga } from './misc.js';
+
 const REMEMBER_PROBABILITY = 0.05;
 
 var randomSpeech = function(onSuccess, onError) {
