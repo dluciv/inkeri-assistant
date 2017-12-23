@@ -10,6 +10,8 @@
 
    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
+   <script type="text/javascript" src="thirdparty/lodash.js"></script>
+
    <!-- UIkit -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.35/css/uikit.min.css" />
    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.35/js/uikit.min.js"></script> -->
@@ -18,6 +20,13 @@
    <script type="module" src="settings.js"></script>
 </head>
 <body>
-  <a href="#" id="authTodoistBtn" class="btn uk-button" >Todoist auth</a>
+  <div class="uk-section">
+    <div class="uk-container">
+      <h3>Todoist</h3>
+      <a href="#" id="authTodoistBtn" class="btn uk-button uk-button-primary uk-disabled">Auth</a>
+      <br/>
+      <span id="authTodoistStatus" class="uk-text"></span>
+    </div>
+  </div>
 </body>
 </html>
