@@ -49,11 +49,11 @@ $.ajax({
 
     var authCode = urlVars['code'];
     var redirectUri = 'https://inkeri.tk/settings.html';
-    var todoistAuthUrl = `https://cors-anywhere.herokuapp.com/https://todoist.com/oauth/access_token`;
+    var todoistAuthUrl = `https://todoist.com/oauth/access_token`;
 
     return $.ajax({
       url: todoistAuthUrl,
-      method: 'GET',
+      method: 'POST',
       dataType: 'json',
       data: {
         client_id     : tdiClientId,
