@@ -49,12 +49,17 @@ $.ajax({
 
     var authCode = urlVars['code'];
     var redirectUri = 'https://inkeri.tk/settings.html';
-    var todoistAuthUrl = `https://todoist.com/oauth/access_token?client_id=${tdiClientId}&client_secret=${tdiClientSecret}&code=${authCode}&redirect_uri=${redirectUri}`;
+    var todoistAuthUrl = `https://todoist.com/oauth/access_token`;
 
     return $.ajax({
       url: todoistAuthUrl,
-      method: 'GET',
-      dataType: 'json'
+      method: 'POST',
+      dataType: 'json',
+      data: {
+        client_id     : tdiClientId,
+        client_secret : tdiClientSecret,
+        code          : authCode
+      }
     });
   }
   else {
