@@ -1,5 +1,5 @@
 import { getUrlVars } from './misc.js';
-import * as Cookies from './thirdparty/js.cookie.js';
+import {} from './thirdparty/js.cookie.js';
 
 var urlVars = getUrlVars();
 console.log(urlVars);
