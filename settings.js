@@ -26,8 +26,8 @@ $.ajax({
     $('#authTodoistStatus').text('Authorizing...');
 
     var authCode = urlVars['code'];
-    var redirectUri = 
-    var todoistAuthUrl = `https://todoist.com/oauth/access_token?client_id=${tdiClientId}&client_secret=${tdiClientSecret}&code=${authCode}&redirect_uri=https://inkeri.tk/settings.html`;
+    var redirectUri = 'https://inkeri.tk/settings.html';
+    var todoistAuthUrl = `https://todoist.com/oauth/access_token?client_id=${tdiClientId}&client_secret=${tdiClientSecret}&code=${authCode}&redirect_uri=${redirectUri}`;
 
     return $.ajax({
       url: todoistAuthUrl,
