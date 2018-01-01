@@ -53,7 +53,7 @@ $.ajax({
 
     return $.ajax({
       url: todoistAuthUrl,
-      method: 'POST',
+      method: 'GET',
       dataType: 'json',
       data: {
         client_id     : tdiClientId,
