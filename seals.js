@@ -9,7 +9,7 @@ const seal_back_value_template = _.template('Фон — <%= micro_tul_hour %> м
 const seal_text_template       = _.template('<%= status_text %> <%= back_text %> Центр реабилитации морских млекопитающих Ленинградской области сообщает. <%= text %>');
 
 // const seals_url = 'https://cors-anywhere.herokuapp.com/http://myfeeds.info/?2angrbmt';
-const seals_url = 'http://feed.exileed.com/vk/feed/sealrescue';
+const seals_url = 'https://cors-anywhere.herokuapp.com/http://feed.exileed.com/vk/feed/sealrescue';
 
 var seal_back_value = " ";
 var seal_status_text = seals_unknown;
