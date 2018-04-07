@@ -142,7 +142,7 @@ addStateHandler(STATES.listening, {
 addStateHandler(STATES.thinking, {
   onAfter: (stOld, stNew, speechResult) => {
     var response;
-    if(speechResult.includes("тюлен")) {
+    if(speechResult.includes("тюлен") || speechResult.includes("нерп")) {
       response = getSealText();
     } else if(speechResult.includes("вальдшне")) {
       response = woodcocks;
@@ -150,6 +150,8 @@ addStateHandler(STATES.thinking, {
       response = zombies;
     } else if(speechResult.includes("погод")) {
       response = weather;
+    } else if(speechResult.includes("статус") || speechResult.includes("обстановк")) {
+      response = get_status();
     } else if(speechResult.includes("крипер") || speechResult.includes("страш")) {
       loadKriperStory((response) => {
   console.log(response);
@@ -312,7 +314,9 @@ var startRemembering = function() {
 }
 
 var tssss = function() {
-  if (isState(STATES.speaking) || isState(STATES.listening)) {
+  if (isState(STATES.initial)) {
+    startListening();
+  } else if (isState(STATES.speaking) || isState(STATES.listening)) {
     setState(STATES.initial);
   }
   else {
@@ -321,21 +325,28 @@ var tssss = function() {
 }
 
 var status_template = _.template("Привет! Говорит И́нкери Норпа Лехтокурпа. <%= weather %> <%= seals %> <%= seals_back %> <%= woodcocks %> <%= zombies %> Спасибо, всего доброго!");
+
+var get_status = function() {
+  var text = status_template({
+    weather    : weather,
+    seals      : getSealStatusText(),
+    seals_back : getSealBackValue(),
+    woodcocks  : woodcocks,
+    zombies    : zombies
+  });
+  return text;
+};
+
 var tell_status = function() {
   if (isState(STATES.initial)) {
-    var text = status_template({
-      weather    : weather,
-      seals      : getSealStatusText(),
-      seals_back : getSealBackValue(),
-      woodcocks  : woodcocks,
-      zombies    : zombies
-    });
+    var text = get_status();
     setState(STATES.speaking, text);
-  }
-  else {
+  } else {
     console.log('tell_status: wrong state');
   }
 };
+
+
 
 var isAlwaysOn = getUrlVars()['on'] == 1;
 if (isAlwaysOn) {
