@@ -39,14 +39,15 @@ export function loadSealStatus(callback) {
     url: seals_url,
     success: function(data) {
       // console.log('ok', data);
-      var parsed = $.parseXML(data);
+      // var parsed = $.parseXML(data);
+      let parsed = data; // it is should be already parsed
       
       measure_seal_background(parsed);
       
       var posts = $(parsed).find('item');
       var postdate = (post) => new Date($(post).find('pubDate').text()).getTime();
       var sortedPosts = posts.sort((p1, p2) => postdate(p2) - postdate(p1))
-      var lastPostHtml = $(sortedPosts).first().find('description').first().text();
+      var lastPostHtml = $(sortedPosts).first().find('description').first();
       var lastPostText = $(lastPostHtml).text();    
       console.log(lastPostText);
       
