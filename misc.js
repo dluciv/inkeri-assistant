@@ -98,3 +98,10 @@ export const STOP_WORDS = ["хватит", "молчи", "спасибо", "до
 export function matchInkeri(speechResult) {
   return _.some(inkeris, (ink) => speechResult.includes(ink));
 }
+
+export function stripHtml(html)
+{
+   var tmp = document.createElement("DIV");
+   tmp.innerHTML = html;
+   return tmp.textContent || tmp.innerText || "";
+}

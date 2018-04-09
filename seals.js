@@ -1,4 +1,4 @@
-import { t_ga, declinateUnit, calculateWeightedAverage } from './misc.js';
+import { t_ga, declinateUnit, calculateWeightedAverage, stripHtml } from './misc.js';
 
 const seals_ok = "Ситуация с тюленями обнадёживающая.";
 const seals_not_ok = "Ситуация с тюленями угрожающая.";
@@ -10,7 +10,7 @@ const seal_text_template       = _.template('<%= status_text %> <%= back_text %>
 
 // const seals_url = 'https://cors-anywhere.herokuapp.com/http://myfeeds.info/?2angrbmt';
 // const seals_url = 'https://cors-anywhere.herokuapp.com/http://feed.exileed.com/vk/feed/sealrescue';
-const seals_url = 'https://cors-anywhere.herokuapp.com/https://jental.name/rss-bridge/index.php?action=display&bridge=Vk&u=sealrescue&format=Mrss';
+const seals_url = 'https://jental.name/rss-bridge/index.php?action=display&bridge=Vk&u=sealrescue&format=Mrss';
 
 var seal_back_value = " ";
 var seal_status_text = seals_unknown;
@@ -48,7 +48,7 @@ export function loadSealStatus(callback) {
       var postdate = (post) => new Date($(post).find('pubDate').text()).getTime();
       var sortedPosts = posts.sort((p1, p2) => postdate(p2) - postdate(p1))
       var lastPostHtml = $(sortedPosts).first().find('description').first();
-      var lastPostText = $(lastPostHtml).text();    
+      var lastPostText = stripHtml($(lastPostHtml).text());
       console.log(lastPostText);
       
       if (lastPostText != null && lastPostText != undefined && lastPostText.trim() != '') {
