@@ -99,9 +99,39 @@ export function matchInkeri(speechResult) {
   return _.some(inkeris, (ink) => speechResult.includes(ink));
 }
 
-export function stripHtml(html)
-{
+export function stripHtml(html) {
    var tmp = document.createElement("DIV");
    tmp.innerHTML = html;
    return tmp.textContent || tmp.innerText || "";
+}
+
+var imagesIv = null;
+const INITIAL_IMAGE = "inkeri.png";
+export function showImages(images) {
+  if (images.length > 0) {
+    setTimeout(() => {
+      var i = 0;
+      $("#inkeriImg").attr("src", images[i]);
+      imagesIv = setInterval(() => {
+        i = (i + 1) % images.length;
+        var img = images[i];
+        console.log("Showing image: ", img);
+        $("#inkeriImg").attr("src", img);
+      }, 5000);
+    }, 3000);
+
+    () => {
+      stopImages();
+    }
+  }
+  else {
+    () => {}
+  }
+}
+export function stopImages() {
+  if (imagesIv) {
+    clearInterval(imagesIv);
+    imagesIv = null;
+    $("#inkeriImg").attr("src", INITIAL_IMAGE);
+  }
 }

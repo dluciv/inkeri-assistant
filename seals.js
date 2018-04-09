@@ -15,6 +15,7 @@ const seals_url = 'https://jental.name/rss-bridge/index.php?action=display&bridg
 var seal_back_value = " ";
 var seal_status_text = seals_unknown;
 var seal_text = seals_unknown;
+var seal_images = [];
 
 var measure_seal_background = function(parsed) {
   var now = new Date().getTime();
@@ -61,6 +62,8 @@ export function loadSealStatus(callback) {
 	  back_text   : seal_back_value,
 	  text        : lastPostText
 	});
+	window.lph = $(lastPostHtml);
+	seal_images = $('<p>' + $(lph).text() + '</p>').find('img').map((i, el) => el.src).toArray();
 
 	if (callback)
 	  callback(moodInfo.score, lastPostText);
@@ -80,6 +83,9 @@ export function getSealStatusText() {
 }
 export function getSealText() {
   return seal_text;
+}
+export function getSealTextImages() {
+  return seal_images;
 }
 export function getSealBackValue() {
   return seal_back_value;

@@ -1,10 +1,10 @@
 ﻿import { STATES, set as setState, get as getState, is as isState, addHandler as addStateHandler } from './states.js';
-import { loadSealStatus, getSealStatusText, getSealText, getSealBackValue } from './seals.js';
+import { loadSealStatus, getSealStatusText, getSealText, getSealTextImages, getSealBackValue } from './seals.js';
 import { loadWeather } from './weather.js';
 import { search } from './search.js';
 import { loadKriperStory } from './kriper.js';
 import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
-import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, matchInkeri, STOP_WORDS } from './misc.js';
+import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, matchInkeri, STOP_WORDS, showImages, stopImages } from './misc.js';
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
@@ -142,8 +142,10 @@ addStateHandler(STATES.listening, {
 addStateHandler(STATES.thinking, {
   onAfter: (stOld, stNew, speechResult) => {
     var response;
+    var images = [];
     if(speechResult.includes("тюлен") || speechResult.includes("нерп")) {
       response = getSealText();
+      images = getSealTextImages();
     } else if(speechResult.includes("вальдшне")) {
       response = woodcocks;
     } else if(speechResult.includes("зомби")) {
@@ -156,7 +158,10 @@ addStateHandler(STATES.thinking, {
       loadKriperStory((response) => {
   console.log(response);
   if (response.trim() != "") {
-    setState(STATES.speaking, response);
+    setState(STATES.speaking, {
+      text: response,
+      images: images
+    });
   }
   else {
     setState(STATES.initial);
@@ -169,7 +174,10 @@ addStateHandler(STATES.thinking, {
         (response) => {
           console.log(response);
           if (response.trim() != "") {
-            setState(STATES.speaking, response);
+            setState(STATES.speaking, {
+              text: response,
+              images: []
+            });
           }
           else {
             setState(STATES.initial);
@@ -183,7 +191,10 @@ addStateHandler(STATES.thinking, {
         (response) => {
           console.log(response);
           if (response.trim() != "") {
-            setState(STATES.speaking, response);
+            setState(STATES.speaking, {
+              text: response,
+              images: []
+            });
           }
           else {
             setState(STATES.initial);
@@ -196,7 +207,10 @@ addStateHandler(STATES.thinking, {
     }
 
     if (response != "") {
-      setState(STATES.speaking, response);
+      setState(STATES.speaking, {
+        text: response,
+        images: []
+      });
     }
     else {
       setState(STATES.initial);
@@ -205,7 +219,8 @@ addStateHandler(STATES.thinking, {
 });
 
 addStateHandler(STATES.speaking, {
-  onAfter: (stOld, stNew, textToSpeak) => {
+  onAfter: (stOld, stNew, data) => {
+    var textToSpeak = data.text;
     try {
       var synth = window.speechSynthesis;
       var voices = synth.getVoices();
@@ -240,7 +255,8 @@ addStateHandler(STATES.speaking, {
         console.log('speaksmth: speech end');
         setState(STATES.initial);
       });
-      
+
+      showImages(data.images);
       synth.speak(utterThis);
     } catch(e) {
       console.log(e);
@@ -258,6 +274,7 @@ addStateHandler(STATES.speaking, {
 
 addStateHandler(STATES.initial, {
   onAfter : (stOld, stNew) => {
+    stopImages();
     if (isAlwaysOn) {
       setTimeout(() => {
         if (isState(STATES.initial)) {
@@ -277,7 +294,10 @@ addStateHandler(STATES.remembering, {
   onAfter: (stOld, stNew) => {
     randomSpeech(
       (resp) => {
-        setState(STATES.speaking, resp);
+        setState(STATES.speaking, {
+          text: resp,
+          images: []
+        });
       },
       () => {
         setState(STATES.initial);
@@ -337,10 +357,13 @@ var get_status = function() {
   return text;
 };
 
-var tell_status = function() {
+window.tell_status = function() {
   if (isState(STATES.initial)) {
     var text = get_status();
-    setState(STATES.speaking, text);
+    setState(STATES.speaking, {
+      text: text,
+      images: []
+    });
   } else {
     console.log('tell_status: wrong state');
   }
