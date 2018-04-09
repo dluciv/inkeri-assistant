@@ -156,16 +156,16 @@ addStateHandler(STATES.thinking, {
       response = get_status();
     } else if(speechResult.includes("крипер") || speechResult.includes("страш")) {
       loadKriperStory((response) => {
-  console.log(response);
-  if (response.trim() != "") {
-    setState(STATES.speaking, {
-      text: response,
-      images: images
-    });
-  }
-  else {
-    setState(STATES.initial);
-  }
+        console.log(response);
+        if (response.trim() != "") {
+          setState(STATES.speaking, {
+            text: response,
+            images: []
+          });
+        }
+        else {
+          setState(STATES.initial);
+        }
       });
       return;
     } else if(isAlwaysOn && matchInkeri(speechResult)) {
@@ -209,7 +209,7 @@ addStateHandler(STATES.thinking, {
     if (response != "") {
       setState(STATES.speaking, {
         text: response,
-        images: []
+        images: images
       });
     }
     else {
