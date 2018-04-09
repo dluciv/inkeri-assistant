@@ -269,12 +269,12 @@ addStateHandler(STATES.speaking, {
   onExitBefore: (stOld, stNew) => {
     speechSynthesis.cancel();
     recognition2.stop();
+    stopImages();
   }
 });
 
 addStateHandler(STATES.initial, {
   onAfter : (stOld, stNew) => {
-    stopImages();
     if (isAlwaysOn) {
       setTimeout(() => {
         if (isState(STATES.initial)) {
