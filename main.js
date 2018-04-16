@@ -33,8 +33,8 @@ else {
     $("#sttbtn").remove();
   });
 }
+var prevSpeechResult = "";
 if (recognition) {
-  var prevSpeechResult = "";
   recognition.onresult = function(event) {
     var speechResult = event.results[0][0].transcript;
     // diagnosticPara.textContent = 'Speech received: ' + speechResult + '.';
@@ -403,4 +403,23 @@ loadSealStatus();
 
 if (isAlwaysOn) {
   startListening();
+}
+
+window.tell = (text) => {
+  if (isState(STATES.initial) || isState(STATES.listening)) {
+    console.log("tell: -> thinking");
+    prevSpeechResult = text;
+    setState(STATES.thinking, text);
+  }
+  else if (isState(STATES.speaking)) {
+    console.log("tell: -> tsss");
+    var stopWordMatched = _.some(STOP_WORDS, (sw) => (sw == text || text.includes(sw)));
+    if (stopWordMatched) {
+      console.log('stop word matched');
+      tssss();
+    }
+  }
+  else {
+    console.log("tell: status: " + getState());
+  }
 }
