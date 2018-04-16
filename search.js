@@ -1,8 +1,8 @@
 import { response_default_template, t_ga, inkeris } from './misc.js';
 
-var searchFull = function(text, onSuccess, onError) {
+var searchFull = function(text, idx, onSuccess, onError) {
   $.ajax({
-    url: `https://inkeri-api.herokuapp.com/short-thought?q=${encodeURIComponent(text)}`,
+    url: `https://inkeri-api.herokuapp.com/short-thought?q=${encodeURIComponent(text)}` + ((idx === null) ? '' : `&idx=${idx}`),
     method: 'GET',
     dataType: 'json',
     success: function(resp) {
@@ -86,6 +86,10 @@ var clearSpeech = function(speechResult) {
     .trim();
 }
 
+var last_speechResultTrimmed = null;
+var lastSearchWasFull = false;
+var lastSearchResultIdx = -1;
+
 var search = function (speechResult, callback) {
   var speechResultTrimmed = clearSpeech(speechResult);
   t_ga('speech_recognition', 'question', speechResultTrimmed);
@@ -96,21 +100,43 @@ var search = function (speechResult, callback) {
       // console.log(resp);
       var response;
       if (resp.AbstractText) {
+        console.log("search: from AbstractText");
         let response = resp.AbstractText;
         storeAnswer(speechResultTrimmed, response, 'duckduckgo');
+
+        last_speechResultTrimmed = speechResultTrimmed;
+        lastSearchWasFull = false;
+        lastSearchResultIdx = -1;
+
         callback(response);
       }
       else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
+        console.log("search: from RelatedTopics");
         let response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
         storeAnswer(speechResultTrimmed, response, 'duckduckgo');
+
+        last_speechResultTrimmed = speechResultTrimmed;
+        lastSearchWasFull = false;
+        lastSearchResultIdx = -1;
+
         callback(response);
       }
       else {
-        searchFull(speechResultTrimmed, (resp) => {
+        console.log("search: full");
+        searchFull(speechResultTrimmed, null, (resp) => {
+          last_speechResultTrimmed = speechResultTrimmed;
+          lastSearchWasFull = true;
+          lastSearchResultIdx = -1;
+
           callback(resp);
         }, () => {
           var response = response_default_template({ speechResult : speechResult });
           storeAnswer(speechResultTrimmed, response, 'constant');
+
+          last_speechResultTrimmed = speechResultTrimmed;
+          lastSearchWasFull = true;
+          lastSearchResultIdx = -2;
+
           callback(response);
         });
       }
@@ -118,8 +144,48 @@ var search = function (speechResult, callback) {
     function() {
       var response = response_default_template({ speechResult : speechResult });
       storeAnswer(speechResultTrimmed, response, 'constant');
+
+      last_speechResultTrimmed = speechResultTrimmed;
+      lastSearchWasFull = false;
+      lastSearchResultIdx = -2;
+
       callback(response);
     });
 }
 
-export { search };
+var next = function(callback) {
+  console.log('search: next: last_speechResultTrimmed: ', last_speechResultTrimmed);
+  console.log('search: next: lastSearchResultIdx: ', lastSearchResultIdx);
+  console.log('search: next: lastSearchWasFull: ', lastSearchWasFull);
+  if (lastSearchResultIdx < -1) {
+    var response = response_default_template({ speechResult : speechResult });
+    storeAnswer(last_speechResultTrimmed, response, 'constant');
+
+    // last_speechResultTrimmed = last_speechResultTrimmed;
+    lastSearchWasFull = false;
+    lastSearchResultIdx = -2;
+
+    callback(response);
+  }
+  else {
+    var newIdx = lastSearchWasFull ? lastSearchResultIdx + 1 : 0;
+    searchFull(last_speechResultTrimmed, newIdx, (resp) => {
+      // last_speechResultTrimmed = last_speechResultTrimmed;
+      lastSearchWasFull = true;
+      lastSearchResultIdx = newIdx;
+
+      callback(resp);
+    }, () => {
+      var response = response_default_template({ speechResult : speechResult });
+      storeAnswer(last_speechResultTrimmed, response, 'constant');
+
+      // last_speechResultTrimmed = last_speechResultTrimmed;
+      lastSearchWasFull = true;
+      lastSearchResultIdx = -1;
+
+      callback(response);
+    });
+  }
+}
+
+export { search, next };

@@ -1,10 +1,10 @@
 ﻿import { STATES, set as setState, get as getState, is as isState, addHandler as addStateHandler } from './states.js';
 import { loadSealStatus, getSealStatusText, getSealText, getSealTextImages, getSealBackValue } from './seals.js';
 import { loadWeather } from './weather.js';
-import { search } from './search.js';
+import { search, next } from './search.js';
 import { loadKriperStory } from './kriper.js';
 import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
-import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, matchInkeri, STOP_WORDS, showImages, stopImages } from './misc.js';
+import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, matchInkeri, STOP_WORDS, NEXT_WORDS, showImages, stopImages } from './misc.js';
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
@@ -168,6 +168,19 @@ addStateHandler(STATES.thinking, {
         }
       });
       return;
+    } else if (_.some(NEXT_WORDS, (sw) => (sw == speechResult || speechResult.includes(sw)))) {
+      next((response) => {
+        console.log(response);
+        if (response.trim() != "") {
+          setState(STATES.speaking, {
+            text: response,
+            images: []
+          });
+        }
+        else {
+          setState(STATES.initial);
+        }
+      });
     } else if(isAlwaysOn && matchInkeri(speechResult)) {
       search(
         speechResult,
@@ -414,9 +427,13 @@ window.tell = (text) => {
   else if (isState(STATES.speaking)) {
     console.log("tell: -> tsss");
     var stopWordMatched = _.some(STOP_WORDS, (sw) => (sw == text || text.includes(sw)));
+    var nextWordMatched = _.some(NEXT_WORDS, (sw) => (sw == text || text.includes(sw)));
     if (stopWordMatched) {
       console.log('stop word matched');
       tssss();
+    }
+    else if (nextWordMatched) {
+      setState(STATES.thinking, text);
     }
   }
   else {

@@ -95,6 +95,7 @@ export function getUrlVars()
 
 export const inkeris = [ "инкери", "inquiries", "интере", "интервью", "интерьер", "intellij", "игры", "inferi", "intel", "inquiry" ];
 export const STOP_WORDS = ["хватит", "молчи", "спасибо", "довольно"];
+export const NEXT_WORDS = ["ещё"];
 export function matchInkeri(speechResult) {
   return _.some(inkeris, (ink) => speechResult.includes(ink));
 }
