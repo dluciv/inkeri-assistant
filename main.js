@@ -5,7 +5,7 @@ import { search, next } from './search.js';
 import { loadKriperStory } from './kriper.js';
 import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
 import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, showImages, stopImages } from './misc.js';
-import { matchInkeri, matchStop, matchStopAny, matchNext } from './words.js';
+import { matchInkeri, matchInkeriAny, matchStop, matchStopAny, matchNext, matchNextAny } from './words.js';
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
@@ -84,13 +84,19 @@ if (recognition2) {
   recognition2.onresult = function(event) {
     // console.log('recognition2.onresult: event: ', event);
     var speechResults = _.flatMap(event.results, (res) => _.map(res, (res2) => [ res2.transcript.toLowerCase() , res2.confidence ]));
+    var speechResultsNC = _.flatMap(event.results, (res) => _.map(res, (res2) => res2.transcript.toLowerCase()));
     console.log('recognition2.onresult: results: ', speechResults);
-    var stopWordMatched = matchStopAny(sr[0]);
+    var stopWordMatched = matchStopAny(speechResultsNC);
+    var inkeriWordMatched = matchInkeriAny(speechResultsNC);
+    var nextWordMatched = matchNextAny(speechResultsNC);
+    console.log('matchInkeri: ', inkeriWordMatched);
+    console.log('matchStop: ', stopWordMatched);
+    console.log('matchNext: ', nextWordMatched);
     if (stopWordMatched) {
       console.log('stop word matched');
       tssss();
     }
-    else if (matchNext(sr[0]) && matchInkeri(sr[0])) {
+    else if (nextWordMatched && inkeriWordMatched) {
       console.log('next word matched');
       next((response) => {
         console.log(response);
@@ -195,6 +201,7 @@ addStateHandler(STATES.thinking, {
           setState(STATES.initial);
         }
       });
+      return;
     } else if(isAlwaysOn && matchInkeri(speechResult)) {
       search(
         speechResult,
