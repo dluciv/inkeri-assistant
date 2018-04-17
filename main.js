@@ -90,7 +90,18 @@ if (recognition2) {
       console.log('stop word matched');
       tssss();
     }
-    
+    else if (matchNext(sr[0]) && matchInkeri(sr[0])) {
+      console.log('next word matched');
+      next((response) => {
+        console.log(response);
+        if (response.trim() != "") {
+          setState(STATES.thinking, response);
+        }
+        else {
+          setState(STATES.initial);
+        }
+      });
+    }
   }
 
   recognition2.onerror = function(error) {
@@ -171,7 +182,7 @@ addStateHandler(STATES.thinking, {
         }
       });
       return;
-    } else if (matchNext(speechResult)) {
+    } else if (matchNext(speechResult) && matchInkeri(speechResult)) {
       next((response) => {
         console.log(response);
         if (response.trim() != "") {
