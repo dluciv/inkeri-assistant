@@ -124,6 +124,7 @@ addStateHandler(STATES.listening, {
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = true;
     if (recognition) {
+      console.log("main: recogition start");
       recognition.start();
     }
     else {
@@ -135,6 +136,7 @@ addStateHandler(STATES.listening, {
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
     if (recognition) {
+      console.log("main: recogition stop");
       recognition.stop();
     }
   }
@@ -278,10 +280,17 @@ addStateHandler(STATES.speaking, {
       setState(STATES.initial);
     }
 
-    recognition2.start();
+    console.log("main: recogition2 start");
+    try {
+      recognition2.start();
+    }
+    catch (e) {
+      console.log("Error: main: cannot start recognition2", e);
+    }
   },
   onExitBefore: (stOld, stNew) => {
     speechSynthesis.cancel();
+    console.log("main: recogition2 stop");
     recognition2.stop();
     stopImages();
   }
