@@ -99,7 +99,7 @@ if (recognition2) {
     else if (nextWordMatched && inkeriWordMatched) {
       console.log('next word matched');
       next((response) => {
-        console.log(response);
+        console.log("main: next [speaking]: response: ", response);
         if (response.trim() != "") {
           setState(STATES.thinking, response);
         }
@@ -137,7 +137,7 @@ if (recognition2) {
 
 addStateHandler(STATES.listening, {
   onAfter: (stOld, stNew) => {
-    console.log('started listening');
+    console.log('main: started listening');
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = true;
     if (recognition) {
@@ -149,7 +149,7 @@ addStateHandler(STATES.listening, {
     }
   },
   onExitBefore : (stOld, stNew) => {
-    console.log('started listening');
+    console.log('main: stopped listening');
     var sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
     if (recognition) {
@@ -176,7 +176,7 @@ addStateHandler(STATES.thinking, {
       response = get_status();
     } else if(speechResult.includes("крипер") || speechResult.includes("страш")) {
       loadKriperStory((response) => {
-        console.log(response);
+        console.log("main: thinking: kriper: response: ", response);
         if (response.trim() != "") {
           setState(STATES.speaking, {
             text: response,
@@ -190,7 +190,7 @@ addStateHandler(STATES.thinking, {
       return;
     } else if (matchNext(speechResult) && matchInkeri(speechResult)) {
       next((response) => {
-        console.log(response);
+        console.log("main: next [thinking]: response:", response);
         if (response.trim() != "") {
           setState(STATES.speaking, {
             text: response,
@@ -206,7 +206,7 @@ addStateHandler(STATES.thinking, {
       search(
         speechResult,
         (response) => {
-          console.log(response);
+          console.log("main: thinking: inkeri: response: ", response);
           if (response.trim() != "") {
             setState(STATES.speaking, {
               text: response,
@@ -223,7 +223,7 @@ addStateHandler(STATES.thinking, {
       search(
         speechResult,
         (response) => {
-          console.log(response);
+          console.log("main: thinking: unknown: response: ", response);
           if (response.trim() != "") {
             setState(STATES.speaking, {
               text: response,
