@@ -1,6 +1,6 @@
 export const inkeris = [ "инкери", "inquiries", "интере", "интервью", "интерьер", "intellij", "игры", "inferi", "intel", "inquiry", "гири", "энгри"];
 export const STOP_WORDS = ["хватит", "молчи", "спасибо", "довольно"];
-export const NEXT_WORDS = ["ещё", "еще", "следующий", "дальше", "едущий"];
+export const NEXT_WORDS = ["ещё", "еще", "следующий", "дальше", "едущий", "next"];
 
 export function matchInkeri(speechResult) {
   return _.some(inkeris, (w) => speechResult == w || speechResult.includes(w));
