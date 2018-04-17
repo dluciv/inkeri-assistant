@@ -1,4 +1,5 @@
-import { response_default_template, t_ga, inkeris } from './misc.js';
+import { response_default_template, t_ga } from './misc.js';
+import { inkeris } from './words.js';
 
 var searchFull = function(text, idx, onSuccess, onError) {
   $.ajax({

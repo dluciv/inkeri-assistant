@@ -4,7 +4,8 @@ import { loadWeather } from './weather.js';
 import { search, next } from './search.js';
 import { loadKriperStory } from './kriper.js';
 import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
-import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, matchInkeri, STOP_WORDS, NEXT_WORDS, showImages, stopImages } from './misc.js';
+import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, showImages, stopImages } from './misc.js';
+import { matchInkeri, matchStop, matchStopAny, matchNext } from './words.js';
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
@@ -84,7 +85,7 @@ if (recognition2) {
     // console.log('recognition2.onresult: event: ', event);
     var speechResults = _.flatMap(event.results, (res) => _.map(res, (res2) => [ res2.transcript.toLowerCase() , res2.confidence ]));
     console.log('recognition2.onresult: results: ', speechResults);
-    var stopWordMatched = _.some(speechResults, (sr) => _.some(STOP_WORDS, (sw) => (sw == sr[0] || sr[0].includes(sw))));
+    var stopWordMatched = matchStopAny(sr[0]);
     if (stopWordMatched) {
       console.log('stop word matched');
       tssss();
@@ -168,7 +169,7 @@ addStateHandler(STATES.thinking, {
         }
       });
       return;
-    } else if (_.some(NEXT_WORDS, (sw) => (sw == speechResult || speechResult.includes(sw)))) {
+    } else if (matchNext(speechResult)) {
       next((response) => {
         console.log(response);
         if (response.trim() != "") {
@@ -426,14 +427,14 @@ window.tell = (text) => {
   }
   else if (isState(STATES.speaking)) {
     console.log("tell: -> tsss");
-    var stopWordMatched = _.some(STOP_WORDS, (sw) => (sw == text || text.includes(sw)));
-    var nextWordMatched = _.some(NEXT_WORDS, (sw) => (sw == text || text.includes(sw)));
-    if (stopWordMatched) {
+    var stopWordMatched = matchStop(text);
+    var nextWordMatched = matchNext(text);
+    if (nextWordMatched) {
+      setState(STATES.thinking, text);
+    }
+    else if (stopWordMatched) {
       console.log('stop word matched');
       tssss();
-    }
-    else if (nextWordMatched) {
-      setState(STATES.thinking, text);
     }
   }
   else {
