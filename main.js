@@ -1,5 +1,6 @@
 ﻿import { STATES, set as setState, get as getState, is as isState, addHandler as addStateHandler } from './states.js';
 import { loadSealStatus, getSealStatusText, getSealText, getSealTextImages, getSealBackValue } from './seals.js';
+import { loadZombieProbability, getZombies } from './zombie_outbreak.js';
 import { loadWeather } from './weather.js';
 import { search, next } from './search.js';
 import { loadKriperStory } from './kriper.js';
@@ -169,7 +170,7 @@ addStateHandler(STATES.thinking, {
     } else if(speechResult.includes("вальдшне")) {
       response = woodcocks;
     } else if(speechResult.includes("зомби")) {
-      response = zombies;
+      response = getZombies();
     } else if(speechResult.includes("погод")) {
       response = weather;
     } else if(speechResult.includes("статус") || speechResult.includes("обстановк")) {
@@ -393,7 +394,7 @@ var get_status = function() {
     seals      : getSealStatusText(),
     seals_back : getSealBackValue(),
     woodcocks  : woodcocks,
-    zombies    : zombies
+    zombies    : getZombies()
   });
   return text;
 };
@@ -420,7 +421,6 @@ if (isAlwaysOn) {
 var weather = "";
 var woodcocks = "Ситуация с ва́льдшнепами настораживает. Двадцать второго апреля в городе Сосновый бор Ленинградской области был обнаружен разбившийся вальдшнеп.";
 var zp = 2800 + Math.round(Math.random()*50);
-var zombies = "Внимание! Вероятность зомби-атаки — " + zp + " на миллион. Это приближается к статистической погрешности.";
 
 $(function() {
   $('#statusBtn').click((e) => {
@@ -441,6 +441,7 @@ setState(STATES.initial);
 
 loadWeather((w) => weather = w);
 loadSealStatus();
+loadZombieProbability();
 
 if (isAlwaysOn) {
   startListening();
