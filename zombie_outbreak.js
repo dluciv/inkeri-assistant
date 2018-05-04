@@ -1,7 +1,7 @@
 import { t_ga, declinateUnit } from './misc.js';
 
 const zombie_data_url = "https://matrix.dluciv.name/zac/zac.json";
-
+const zombie_plot_url = "https://matrix.dluciv.name/zac/zz1.svg";
 const zombies_unknown = "Данные по активности зомби не поступили.";
 const zombies_error = "Активность зомби носит скрытый характер.";
 var zombies = zombies_unknown;
@@ -49,5 +49,5 @@ export function loadZombieProbability(callback) {
 }
 
 export function getZombieTextImages() {
-  return ["https://matrix.dluciv.name/zac/zz1.svg"];
+  return [zombie_plot_url];
 }
