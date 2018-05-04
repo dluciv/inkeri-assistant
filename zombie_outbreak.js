@@ -1,6 +1,6 @@
 import { t_ga, declinateUnit } from './misc.js';
 
-const zombie_data_url = "https://api.jsonbin.io/b/5ae0e545b7d3ee31bdc23232/latest";
+const zombie_data_url = "https://matrix.dluciv.name/zac/zac.json";
 
 const zombies_unknown = "Данные по активности зомби не поступили.";
 const zombies_error = "Активность зомби носит скрытый характер.";
@@ -46,4 +46,8 @@ export function loadZombieProbability(callback) {
 	callback(zombies);
     }
   })
+}
+
+export function getZombieTextImages() {
+  return ["https://matrix.dluciv.name/zac/zz1.svg"];
 }

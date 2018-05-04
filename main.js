@@ -1,6 +1,6 @@
 ﻿import { STATES, set as setState, get as getState, is as isState, addHandler as addStateHandler } from './states.js';
 import { loadSealStatus, getSealStatusText, getSealText, getSealTextImages, getSealBackValue } from './seals.js';
-import { loadZombieProbability, getZombies } from './zombie_outbreak.js';
+import { loadZombieProbability, getZombies, getZombieTextImages } from './zombie_outbreak.js';
 import { loadWeather } from './weather.js';
 import { search, next } from './search.js';
 import { loadKriperStory } from './kriper.js';
@@ -171,6 +171,7 @@ addStateHandler(STATES.thinking, {
       response = woodcocks;
     } else if(speechResult.includes("зомби")) {
       response = getZombies();
+      images = getZombieTextImages();
     } else if(speechResult.includes("погод")) {
       response = weather;
     } else if(speechResult.includes("статус") || speechResult.includes("обстановк")) {
