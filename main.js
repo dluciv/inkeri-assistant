@@ -7,6 +7,7 @@ import { loadKriperStory } from './kriper.js';
 import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
 import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, showImages, stopImages } from './misc.js';
 import { matchInkeri, matchInkeriAny, matchStop, matchStopAny, matchNext, matchNextAny } from './words.js';
+import { init as initPushes } from './pushes/index.js';
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
@@ -470,3 +471,5 @@ window.tell = (text) => {
     console.log("tell: status: " + getState());
   }
 }
+
+window.ip = initPushes;
