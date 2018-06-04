@@ -19,13 +19,40 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
+var handlers = {
+  'url': []
+};
+let onEvent = (etype, callback) => {
+  if (etype in handlers) {
+    handlers[etype].push(callback);
+  }
+}
+
+let onWorkerMessage = (event) => {
+  console.log('push worker event: ', event);
+
+  var data = null;
+  try {
+    data = JSON.parse(event.data);
+  }
+  catch (e) {}
+
+  if (data && data.event && data.event in handlers) {
+    handlers[data.event].forEach((h) => h(data));
+  }
+}
+
 let init = async () => {
   navigator.serviceWorker.register('pushes-service-worker.js');
 
   var registration = await navigator.serviceWorker.ready;
   console.log('got registration');
+
+  var msg_chan = new MessageChannel();
+  msg_chan.port1.onmessage = onWorkerMessage;
+  navigator.serviceWorker.controller.postMessage("subscribe", [msg_chan.port2]);
+  
   var subscription = await registration.pushManager.getSubscription();
-  window.ss = subscription;
   if (!subscription) {
       const response = await fetch(`${BRAINS_BASE_URL}pushVapidPublicKey`);
       const vapidPublicKey = await response.text();
@@ -52,4 +79,4 @@ let init = async () => {
   console.log('Push requested');
 }
 
-export { init };
+export { init, onEvent };

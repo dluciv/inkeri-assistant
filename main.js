@@ -7,7 +7,8 @@ import { loadKriperStory } from './kriper.js';
 import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
 import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, showImages, stopImages } from './misc.js';
 import { matchInkeri, matchInkeriAny, matchStop, matchStopAny, matchNext, matchNextAny } from './words.js';
-import { init as initPushes } from './push.js';
+import { init as initPushes, onEvent as onPushEvent } from './push.js';
+import { readUrl } from './reader.js';
 
 var SpeechRecognition = null;
 var SpeechGrammarList = null;
@@ -350,6 +351,8 @@ addStateHandler(STATES.remembering, {
   }
 });
 
+
+
 var startListening = function() {
   if (isState(STATES.initial)) {
     setState(STATES.listening);
@@ -445,6 +448,29 @@ loadWeather((w) => weather = w);
 loadSealStatus();
 loadZombieProbability();
 
+initPushes();
+onPushEvent('url', (event) => {
+  console.log('main: push event: [url]: ', event);
+
+  if (isState(STATES.initial) || isState(STATES.listening)) {
+    readUrl(event.data, (response) => {
+      console.log("main: push event: [url]: response: ", response.trim());
+      if (response.trim() != "") {
+        setState(STATES.speaking, {
+          text: response,
+          images: []
+        });
+      }
+      else {
+        setState(STATES.initial);
+      }
+    });
+  }
+  else {
+    console.log('main: push event: [url]: ', event, 'wrong state');
+  }
+});
+
 if (isAlwaysOn) {
   startListening();
 }
@@ -471,5 +497,3 @@ window.tell = (text) => {
     console.log("tell: status: " + getState());
   }
 }
-
-window.ip = initPushes;
