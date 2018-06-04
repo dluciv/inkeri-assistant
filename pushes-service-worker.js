@@ -1,4 +1,9 @@
 self.addEventListener('push', (event) => {
   console.log('push event: ', event);
-  console.log('push event args: ', arguments);
+
+  var data = {};
+  if (event.data) {
+    data = event.data.text();
+  }
+  console.log('push event data: ', data);
 });
