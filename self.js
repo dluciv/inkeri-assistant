@@ -1,10 +1,11 @@
 import { t_ga } from './misc.js';
+import { BRAINS_BASE_URL } from './settings.js';
 
 const REMEMBER_PROBABILITY = 0.05;
 
 var randomSpeech = function(onSuccess, onError) {
   $.ajax({
-    url: 'https://inkeri-api.herokuapp.com/random-knowledge',
+    url: `${BRAINS_BASE_URL}random-knowledge`,
     method: 'GET',
     dataType: 'json',
     success: function(resp) {

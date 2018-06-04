@@ -1,9 +1,10 @@
 import { response_default_template, t_ga } from './misc.js';
 import { inkeris } from './words.js';
+import { BRAINS_BASE_URL } from './settings.js';
 
 var searchFull = function(text, idx, onSuccess, onError) {
   $.ajax({
-    url: `https://inkeri-api.herokuapp.com/short-thought?q=${encodeURIComponent(text)}` + ((idx === null) ? '' : `&idx=${idx}`),
+    url: `${BRAINS_BASE_URL}short-thought?q=${encodeURIComponent(text)}` + ((idx === null) ? '' : `&idx=${idx}`),
     method: 'GET',
     dataType: 'json',
     success: function(resp) {
@@ -30,7 +31,7 @@ var searchFull = function(text, idx, onSuccess, onError) {
 
 var storeAnswer = function(question, answer, engine) {
   $.ajax({
-    url: 'https://inkeri-api.herokuapp.com/store-answer?format=json',
+    url: `${BRAINS_BASE_URL}store-answer?format=json`,
     method: 'GET',
     data: {
       q: question,

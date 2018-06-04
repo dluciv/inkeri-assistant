@@ -1,6 +1,9 @@
 import { getUrlVars } from './misc.js';
 import {} from './thirdparty/js.cookie.js';
 
+// export const BRAINS_BASE_URL = 'https://inkeri-api.herokuapp.com/';
+export const BRAINS_BASE_URL = 'https://inkeri-api.jental.name/';
+
 var urlVars = getUrlVars();
 console.log(urlVars);
 
@@ -23,7 +26,7 @@ else {
 }
 
 $.ajax({
-  url: 'https://inkeri-api.herokuapp.com/todoist-auth-data',
+  url: `${BRAINS_BASE_URL}todoist-auth-data`,
   method: 'GET',
   dataType: 'json'
 })
