@@ -66,7 +66,7 @@ let init = async () => {
       });
   }
   console.log('got subscription', subscription);
-  var resp = await fetch(`${BRAINS_BASE_URL}pushTest`, {
+  await fetch(`${BRAINS_BASE_URL}pushSubscribe`, {
     method: 'post',
     headers: {
       'Content-type': 'application/json'
@@ -77,6 +77,20 @@ let init = async () => {
     })
   });
   console.log('Push requested');
+
+  // window.onbeforeunload = function() {
+  //   fetch(`${BRAINS_BASE_URL}pushUnsubscribe`, {
+  //     method: 'post',
+  //     headers: {
+  //       'Content-type': 'application/json'
+  //     },
+  //     body: JSON.stringify({
+  //       subscription: subscription,
+  //       test: 'testv'
+  //     })
+  //   });
+  //   console.log('Push unsubscribed');
+  // }
 }
 
 export { init, onEvent };
