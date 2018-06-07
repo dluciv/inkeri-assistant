@@ -470,6 +470,10 @@ onPushEvent('url', (event) => {
     console.log('main: push event: [url]: ', event, 'wrong state');
   }
 });
+onPushEvent('message', (event) => {
+  console.log('main: push event: [message]: ', event);
+  tell(event.data);
+});
 
 if (isAlwaysOn) {
   startListening();

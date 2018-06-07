@@ -21,6 +21,14 @@ self.addEventListener('push', (event) => {
       }));
     }
   }
+  else if (json && json.message) {
+    if (self.msg_port) {
+      self.msg_port.postMessage(JSON.stringify({
+        event: 'message',
+        data: json.message
+      }));
+    }
+  }
 });
 
 self.addEventListener('message', (event) => {
