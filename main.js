@@ -474,6 +474,15 @@ onPushEvent('message', (event) => {
   console.log('main: push event: [message]: ', event);
   tell(event.data);
 });
+onPushEvent('say', (event) => {
+  console.log('main: push event: [say]: ', event);
+  if (event.data.trim() != "") {
+    setState(STATES.speaking, {
+      text: event.data,
+      images: []
+    });
+  }
+});
 
 if (isAlwaysOn) {
   startListening();

@@ -21,7 +21,8 @@ function urlBase64ToUint8Array(base64String) {
 
 var handlers = {
   'url': [],
-  'message': []
+  'message': [],
+  'say': []
 };
 let onEvent = (etype, callback) => {
   if (etype in handlers) {
