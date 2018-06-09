@@ -29,6 +29,9 @@ let readUrlText = function(url, callback) {
   $.ajax({
     url: url2,
     method: 'GET',
+    xhrFields: {
+      withCredentials: true
+    },
     success: function(resp, result, xhr) {
       window.resp = resp;
       callback(resp.title + '\n' + cleanup(resp.content));

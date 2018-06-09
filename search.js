@@ -6,6 +6,9 @@ var searchFull = function(text, idx, onSuccess, onError) {
   $.ajax({
     url: `${BRAINS_BASE_URL}short-thought?q=${encodeURIComponent(text)}` + ((idx === null) ? '' : `&idx=${idx}`),
     method: 'GET',
+    xhrFields: {
+      withCredentials: true
+    },
     dataType: 'json',
     success: function(resp) {
       let data = resp.response;
@@ -33,6 +36,9 @@ var storeAnswer = function(question, answer, engine) {
   $.ajax({
     url: `${BRAINS_BASE_URL}store-answer?format=json`,
     method: 'GET',
+    xhrFields: {
+      withCredentials: true
+    },
     data: {
       q: question,
       a: answer,

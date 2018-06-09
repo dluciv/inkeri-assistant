@@ -7,14 +7,17 @@ var randomSpeech = function(onSuccess, onError) {
   $.ajax({
     url: `${BRAINS_BASE_URL}random-knowledge`,
     method: 'GET',
+    xhrFields: {
+      withCredentials: true
+    },
     dataType: 'json',
     success: function(resp) {
       var query = resp.query;
       var response = resp.response;
 
       if (query === undefined || response === undefined || response.trim() == "") {
-	onError();
-	return;
+        onError();
+        return;
       }
       
       console.log("randomSpeech: query: ", query);

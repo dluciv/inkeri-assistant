@@ -56,16 +56,16 @@ let init = async () => {
   
   var subscription = await registration.pushManager.getSubscription();
   if (!subscription) {
-      const response = await fetch(`${BRAINS_BASE_URL}pushVapidPublicKey`);
-      const vapidPublicKey = await response.text();
-      const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+    const response = await fetch(`${BRAINS_BASE_URL}pushVapidPublicKey`, { credentials: 'include' });
+    const vapidPublicKey = await response.text();
+    const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
-      console.log('creating subscription');
+    console.log('creating subscription');
 
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
         applicationServerKey: convertedVapidKey
-      });
+    });
   }
   console.log('got subscription', subscription);
   await fetch(`${BRAINS_BASE_URL}pushSubscribe`, {
@@ -73,6 +73,7 @@ let init = async () => {
     headers: {
       'Content-type': 'application/json'
     },
+    credentials: 'include',
     body: JSON.stringify({
       subscription: subscription,
       test: 'testv'
@@ -86,6 +87,7 @@ let init = async () => {
   //     headers: {
   //       'Content-type': 'application/json'
   //     },
+  //     credentials: 'include',
   //     body: JSON.stringify({
   //       subscription: subscription,
   //       test: 'testv'
