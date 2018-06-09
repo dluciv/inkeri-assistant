@@ -5,7 +5,7 @@ import { loadWeather } from './weather.js';
 import { search, next } from './search.js';
 import { loadKriperStory } from './kriper.js';
 import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
-import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, showImages, stopImages } from './misc.js';
+import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, showImages, stopImages, showToken } from './misc.js';
 import { matchInkeri, matchInkeriAny, matchStop, matchStopAny, matchNext, matchNextAny } from './words.js';
 import { init as initPushes, onEvent as onPushEvent } from './push.js';
 import { readUrl } from './reader.js';
@@ -192,6 +192,10 @@ addStateHandler(STATES.thinking, {
         }
       });
       return;
+    } else if (speechResult.includes("матриц") || speechResult.includes("matrix")) {
+      console.log("main: thinking: matrix");
+      showToken();
+      setState(STATES.initial);
     } else if (matchNext(speechResult) && matchInkeri(speechResult)) {
       next((response) => {
         console.log("main: next [thinking]: response:", response);

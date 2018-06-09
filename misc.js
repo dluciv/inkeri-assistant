@@ -1,3 +1,5 @@
+import { BRAINS_BASE_URL } from './settings.js';
+
 var _units = {
   "градус" : ["градуса", "градусов"],
   "метр" : ["метра", "метров"],
@@ -128,5 +130,31 @@ export function stopImages() {
     clearInterval(imagesIv);
     imagesIv = null;
     $("#inkeriImg").attr("src", INITIAL_IMAGE);
+  }
+}
+
+// From https://www.w3schools.com/js/js_cookies.asp
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+export async function showToken() {
+  let resp = await fetch(`${BRAINS_BASE_URL}authtoken`, { credentials: 'include' });
+  let token = await resp.text();
+  if (token) {
+    console.log('token: ', token, $("#authToken"));
+    $("#authToken").text(token.slice(0, 6)).toggle(true);
   }
 }
