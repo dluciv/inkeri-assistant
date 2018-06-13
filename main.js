@@ -457,12 +457,12 @@ onPushEvent('url', (event) => {
   console.log('main: push event: [url]: ', event);
 
   if (isState(STATES.initial) || isState(STATES.listening)) {
-    readUrl(event.data, (response) => {
+    readUrl(event.data, (response, images) => {
       console.log("main: push event: [url]: response: ", response.trim());
       if (response.trim() != "") {
         setState(STATES.speaking, {
           text: response,
-          images: []
+          images: (images ? images : [])
         });
       }
       else {

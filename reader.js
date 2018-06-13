@@ -1,8 +1,12 @@
 import { t_ga } from './misc.js';
 import { BRAINS_BASE_URL } from './settings.js';
 
-let cleanup = (pageText) => {
-  return $(pageText).not('script').text();
+let cleanup = ($pageText) => {
+  console.log('reader: cleanup: before: ', $pageText);
+  return $pageText.not('script').not('img').text();
+}
+let extractImages = (baseUrl, $pageText) => {
+  return $pageText.find('img').map((i, el) => baseUrl + $(el).attr('src'));
 }
 
 let readUrlWithHeroku = function(url, callback) {
@@ -34,7 +38,11 @@ let readUrlText = function(url, callback) {
     },
     success: function(resp, result, xhr) {
       window.resp = resp;
-      callback(resp.title + '\n' + cleanup(resp.content));
+      let $content = $(resp.content);
+      let baseUrl = url.split('/').slice(0, 3).join('/') + '/';
+      let images = extractImages(baseUrl, $content);
+      console.log('images: ', images);
+      callback(resp.title + '\n' + cleanup($content), images);
     },
     error: function(err) {
       console.log('Error. ', err);
