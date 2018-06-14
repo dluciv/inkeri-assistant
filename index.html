@@ -2,77 +2,43 @@
 <html lang="ru">
 <head>
    <meta charset="utf-8" />
-   <!-- https://stackoverflow.com/a/4723302/539470 -->
-   <script>
-   if (location.protocol != 'https:' && location.hostname != 'localhost' && location.hostname != '127.0.0.1') location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
-   </script>
-   <!-- Global site tag (gtag.js) - Google Analytics -->
-   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-110108110-1"></script>
-   <script type="text/javascript" src="thirdparty/lodash.js"></script>
-   <script>
-     window.dataLayer = window.dataLayer || [];
-     function gtag(){dataLayer.push(arguments);}
-     gtag('js', new Date());
-     gtag('config', 'UA-110108110-1');
-   </script>
-   <!-- -->
    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+   <title>Inkeri</title>
+
    <link rel="shortcut icon" href="./favicon.png" type="image/x-icon" />
    <link rel="icon" href="./favicon.png" type="image/x-icon" />
-   <title>Inkeri</title>
-   <style>
-   body {
-     font-size: 5mm;
-     font-family: sans-serif;
-     margin: 5mm;
-   }
+   <link rel="stylesheet" href="index.css" />
 
-   input {
-     font-size: 5mm;
-     font-family: monospace;
-   }
-
-   input[type="button"] {
-     font-family: sans-serif;
-   }
-
-   input[type="submit"] {
-     font-family: sans-serif;
-   }
-   
-   form, p {
-     text-align: center;
-   }
-
-   table {
-     margin-left: auto;
-     margin-right: auto;
-   }
-
-   td {
-     padding: 0.25em;
-   }
-   </style>
-<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script type="module" src="main.js"></script>
-<script type="text/javascript" src="Sentimental/wordLists/afinn.js"></script>
-<script type="text/javascript" src="Sentimental/sentimental.js"></script>
+   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-110108110-1"></script>
+   <script type="text/javascript" src="thirdparty/lodash.js"></script>
+   <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+   <script type="module" src="main.js"></script>
+   <script type="text/javascript" src="Sentimental/wordLists/afinn.js"></script>
+   <script type="text/javascript" src="Sentimental/sentimental.js"></script>
 </head>
+
 <body>
-<p>
-<img src="inkeri.png" id="inkeriImg" style="max-width: 100%; max-height: 75%;" alt="Pretty Inkeri portrait" />
-</p>
-<p style="display: none;">
-<input type="button" id="statusBtn" value="Обстановка" />
-</p>
-<p style="display: none;">
-<input type="submit" id="sttbtn" value="Привет, Инкери" />
-</p>
-<p id="authToken" style="display: none;">-</p>
-<p style='text-align: left;'>
-<tt style="font-family: monospace;" id="log_for_user_text">
-</tt>
-</p>
+  <div id="main-panel">
+    <p>
+      <img src="inkeri.png" id="inkeriImg" style="max-width: 100%; max-height: 75%;" alt="Pretty Inkeri portrait" />
+    </p>
+    <p style="display: none;">
+      <input type="button" id="statusBtn" value="Обстановка" />
+    </p>
+    <p style="display: none;">
+      <input type="submit" id="sttbtn" value="Привет, Инкери" />
+    </p>
+    <p id="authToken" style="display: none;">-</p>
+    <p style='text-align: left;'>
+      <tt style="font-family: monospace;" id="log_for_user_text">
+      </tt>
+    </p>
+  </div>
+  <div id="right-panel">
+    
+  </div>
 </body>
+
 </html>
