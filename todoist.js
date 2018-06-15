@@ -34,7 +34,7 @@ let initTodoist = async () => {
   let res = null;
   if (todoistAuthState == TODOIST_AUTH_STATES.INITIAL) {
     if (token) {
-      Cookies.set('todoist_auth_token', res.access_token, 365);
+      Cookies.set('todoist_auth_token', token, 365);
       $('#authTodoistStatus').text('Connected');
     }
     else {
