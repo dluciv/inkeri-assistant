@@ -7,7 +7,30 @@ const TODOIST_AUTH_STATES = {
   REDIRECT : 1
 };
 
-let initTodoist = async () => {
+const getTasks = async (token) => {
+  const res = await $.ajax({
+    url: 'https://beta.todoist.com/API/v8/tasks',
+    method: 'GET',
+    beforeSend: function (xhr) {
+      xhr.setRequestHeader ("Authorization", `Bearer ${token}`);
+    }
+  });
+  console.log(res);
+}
+
+const onTokenGot = (token) => {
+  if (token) {
+    console.log('token: ', token);
+    Cookies.set('todoist_auth_token', token, 365);
+    $('#authTodoistStatus').text('Connected');
+    $('#todoistTasksBtn')
+      .toggle(true)
+      .toggleClass('uk-disabled', false)
+      .click((e) => { e.preventDefault(); getTasks(token); });
+  }
+}
+
+const initTodoist = async () => {
   let todoistAuthState = null;
 
   const urlVars = getUrlVars();
@@ -34,14 +57,13 @@ let initTodoist = async () => {
   let res = null;
   if (todoistAuthState == TODOIST_AUTH_STATES.INITIAL) {
     if (token) {
-      Cookies.set('todoist_auth_token', token, 365);
-      $('#authTodoistStatus').text('Connected');
+      onTokenGot(token);
     }
     else {
       let todoistAuthUrl = `https://todoist.com/oauth/authorize?client_id=${clientId}&scope=${scope}&state=${state}`;
       $('#authTodoistBtn')
-      .prop('href', todoistAuthUrl)
-      .toggle(true)
+        .prop('href', todoistAuthUrl)
+        .toggle(true)
         .toggleClass('uk-disabled', false);
     }
   }
@@ -68,11 +90,7 @@ let initTodoist = async () => {
   }
 
   if (res) {
-    console.log('token: ', res.access_token);
-    if (res.token) {
-      Cookies.set('todoist_auth_token', res.access_token, 365);
-      $('#authTodoistStatus').text('Connected');
-    }
+    onTokenGot(res.token);
   }
 }
 
