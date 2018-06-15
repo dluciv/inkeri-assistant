@@ -20,7 +20,7 @@ let initTodoist = async () => {
     todoistAuthState = TODOIST_AUTH_STATES.INITIAL;
   }
 
-  const {clientId, clientSecret, scope, state} = await $.ajax({
+  const {token, clientId, clientSecret, scope, state} = await $.ajax({
     url: `${BRAINS_BASE_URL}todoist-auth-data`,
     method: 'GET',
     xhrFields: {
@@ -33,11 +33,17 @@ let initTodoist = async () => {
 
   let res = null;
   if (todoistAuthState == TODOIST_AUTH_STATES.INITIAL) {
-    let todoistAuthUrl = `https://todoist.com/oauth/authorize?client_id=${clientId}&scope=${scope}&state=${state}`;
-    $('#authTodoistBtn')
-    .prop('href', todoistAuthUrl)
-    .toggle(true)
-    .toggleClass('uk-disabled', false);
+    if (token) {
+      Cookies.set('todoist_auth_token', res.access_token, 365);
+      $('#authTodoistStatus').text('Connected');
+    }
+    else {
+      let todoistAuthUrl = `https://todoist.com/oauth/authorize?client_id=${clientId}&scope=${scope}&state=${state}`;
+      $('#authTodoistBtn')
+      .prop('href', todoistAuthUrl)
+      .toggle(true)
+        .toggleClass('uk-disabled', false);
+    }
   }
   else if (todoistAuthState == TODOIST_AUTH_STATES.REDIRECT) {
     $('#authTodoistStatus').text('Authorizing...');
@@ -63,7 +69,7 @@ let initTodoist = async () => {
 
   if (res) {
     console.log('token: ', res.access_token);
-    if (res.access_token) {
+    if (res.token) {
       Cookies.set('todoist_auth_token', res.access_token, 365);
       $('#authTodoistStatus').text('Connected');
     }
