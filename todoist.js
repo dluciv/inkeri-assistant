@@ -44,28 +44,19 @@ let initTodoist = async () => {
 
     let authCode = urlVars['code'];
     let redirectUri = 'https://inkeri.tk/settings.html';
-    let todoistAuthUrl = `https://todoist.com/oauth/access_token`;
-
-    // res = await $.ajax({
-    //   url: todoistAuthUrl,
-    //   method: 'POST',
-    //   dataType: 'json',
-    //   data: {
-    //     client_id     : clientId,
-    //     client_secret : clientSecret,
-    //     code          : authCode
-    //   }
-    // });
+    let todoistAuthUrl = 'https://todoist.com/oauth/access_token';
+    let state2 = decodeURIComponent(urlVars['state']);
 
     res = await $.ajax({
-      url: `${BRAINS_BASE_URL}/todoist_token`,
+      url: `${BRAINS_BASE_URL}todoist-token`,
       method: 'get',
       dataType: 'json',
       xhrFields: {
         withCredentials: true
       },
       data: {
-        code : authCode
+        code : authCode,
+        state: state2
       }
     });
   }
@@ -74,6 +65,7 @@ let initTodoist = async () => {
     console.log('token: ', res.access_token);
     if (res.access_token) {
       Cookies.set('todoist_auth_token', res.access_token, 365);
+      $('#authTodoistStatus').text('Connected');
     }
   }
 }
