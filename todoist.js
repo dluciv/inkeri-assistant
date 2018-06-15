@@ -9,10 +9,6 @@ const TODOIST_AUTH_STATES = {
 
 let initTodoist = async () => {
   let todoistAuthState = null;
-  let tdiClientId     = null;
-  let tdiClientSecret = null;
-  let tdiScope        = null;
-  let tdiState        = null;
 
   const urlVars = getUrlVars();
   console.log(urlVars);
@@ -33,16 +29,11 @@ let initTodoist = async () => {
     dataType: 'json'
   });
 
-  tdiClientId      = clientId;
-  tdiClientSecret  = clientSecret;
-  tdiScope         = scope;
-  tdiState         = state;
-
   await $(document).ready();
 
   let res = null;
   if (todoistAuthState == TODOIST_AUTH_STATES.INITIAL) {
-    let todoistAuthUrl = `https://todoist.com/oauth/authorize?client_id=${tdiClientId}&scope=${tdiScope}&state=${tdiState}`;
+    let todoistAuthUrl = `https://todoist.com/oauth/authorize?client_id=${clientId}&scope=${scope}&state=${state}`;
     $('#authTodoistBtn')
     .prop('href', todoistAuthUrl)
     .toggle(true)
@@ -55,14 +46,26 @@ let initTodoist = async () => {
     let redirectUri = 'https://inkeri.tk/settings.html';
     let todoistAuthUrl = `https://todoist.com/oauth/access_token`;
 
+    // res = await $.ajax({
+    //   url: todoistAuthUrl,
+    //   method: 'POST',
+    //   dataType: 'json',
+    //   data: {
+    //     client_id     : clientId,
+    //     client_secret : clientSecret,
+    //     code          : authCode
+    //   }
+    // });
+
     res = await $.ajax({
-      url: todoistAuthUrl,
-      method: 'POST',
+      url: `${BRAINS_BASE_URL}/todoist_token`,
+      method: 'get',
       dataType: 'json',
+      xhrFields: {
+        withCredentials: true
+      },
       data: {
-        client_id     : tdiClientId,
-        client_secret : tdiClientSecret,
-        code          : authCode
+        code : authCode
       }
     });
   }
