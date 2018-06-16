@@ -9,7 +9,7 @@ import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVar
 import { matchInkeri, matchInkeriAny, matchStop, matchStopAny, matchNext, matchNextAny } from './words.js';
 import { init as initPushes, onEvent as onPushEvent } from './push.js';
 import { readUrl } from './reader.js';
-import { initTodoist } from './todoist.js';
+import { initTodoist, onTask } from './todoist.js';
 
 // -- To Force https ------------------------------
 // -- https://stackoverflow.com/a/4723302/539470 --
@@ -505,6 +505,10 @@ onPushEvent('say', (event) => {
 });
 
 initTodoist();
+onTask((task) => {
+  console.log('todoist task: ', task.content);
+  window.tell(task.content);
+});
 
 if (isAlwaysOn) {
   startListening();

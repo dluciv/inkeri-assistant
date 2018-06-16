@@ -7,34 +7,73 @@ const TODOIST_AUTH_STATES = {
   REDIRECT : 1
 };
 
-const getTasks = async (token) => {
-  const res = await $.ajax({
-    url: 'https://beta.todoist.com/API/v8/tasks',
-    method: 'GET',
-    beforeSend: function (xhr) {
-      xhr.setRequestHeader ("Authorization", `Bearer ${token}`);
-    }
-  });
-  console.log(res);
+let todoistToken = null;
+
+const getTasks = async () => {
+  if (todoistToken) {
+    const res = await $.ajax({
+      url: 'https://beta.todoist.com/API/v8/tasks',
+      method: 'GET',
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader ("Authorization", `Bearer ${todoistToken}`);
+      }
+    });
+    return res;
+  }
+  else
+    return [];
+}
+
+let taskHandlers = [];
+const onTask = (callback) => {
+  taskHandlers.push(callback);
+
+  if (taskHandlers.length == 1) {
+    setInterval(() => {
+      getTasks().then((tasks) => {
+        tasks.forEach((task) => {
+          if (!task.completed) {
+            var time = new Date(task.due.datetime);
+            var diff = time - Date.now();
+            console.log('todoist: times: ', time, diff);
+            if (diff <= 1000 && diff >  -1000 * 60) {
+              taskHandlers.forEach((h) => h(task));
+            }
+          }
+        });
+      });
+    }, 1000 * 30);
+  }
 }
 
 const onTokenGot = (token) => {
   if (token) {
     console.log('token: ', token);
     Cookies.set('todoist_auth_token', token, 365);
+    todoistToken = token;
     $('#authTodoistStatus').text('Connected');
     $('#todoistTasksBtn')
       .toggle(true)
       .toggleClass('uk-disabled', false)
-      .click((e) => { e.preventDefault(); getTasks(token); });
+      .click((e) => { e.preventDefault(); getTasksI(); });
   }
 }
 
 const initTodoist = async () => {
   let todoistAuthState = null;
 
+  if (todoistToken != null) {
+    return;
+  }
+
   const urlVars = getUrlVars();
   console.log(urlVars);
+
+  const token0 = Cookies.get('todoist_auth_token');
+  if (token0) {
+    onTokenGot(token0);
+    return;
+  }
 
   if (urlVars['action'] == 'oauth_redirect' && urlVars['service'] == 'todoist') {
     todoistAuthState = TODOIST_AUTH_STATES.REDIRECT;
@@ -94,4 +133,4 @@ const initTodoist = async () => {
   }
 }
 
-export { initTodoist }
+export { initTodoist, getTasks, onTask }
