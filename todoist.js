@@ -24,6 +24,18 @@ const getTasks = async () => {
     return [];
 }
 
+const closeTask = (task) => {
+  if (todoistToken && task && task.id) {
+    $.ajax({
+      url: `https://beta.todoist.com/API/v8/tasks/${task.id}/close`,
+      method: 'POST',
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader ("Authorization", `Bearer ${todoistToken}`);
+      }
+    });
+  }
+}
+
 let taskHandlers = [];
 const onTask = (callback) => {
   taskHandlers.push(callback);
@@ -38,6 +50,7 @@ const onTask = (callback) => {
             console.log('todoist: times: ', time, diff);
             if (diff <= 1000 && diff >  -1000 * 60) {
               taskHandlers.forEach((h) => h(task));
+              closeTask(task);
             }
           }
         });
