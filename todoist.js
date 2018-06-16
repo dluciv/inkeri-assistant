@@ -47,7 +47,7 @@ const onTask = (callback) => {
           if (!task.completed) {
             var time = new Date(task.due.datetime);
             var diff = time - Date.now();
-            console.log('todoist: times: ', time, diff);
+            // console.log('todoist: times: ', time, diff);
             if (diff <= 1000 && diff >  -1000 * 60) {
               taskHandlers.forEach((h) => h(task));
               closeTask(task);
