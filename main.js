@@ -182,7 +182,16 @@ addStateHandler(STATES.thinking, {
   onAfter: (stOld, stNew, speechResult) => {
     var response;
     var images = [];
-    if(speechResult.includes("тюлен") || speechResult.includes("нерп")) {
+    if (speechResult.startsWith("say ")) {
+      const t = speechResult.slice(4).trim();
+      if (t != "") {
+        setState(STATES.speaking, {
+          text: t,
+          images: []
+        });
+      }
+    }
+    else if(speechResult.includes("тюлен") || speechResult.includes("нерп")) {
       response = getSealText();
       images = getSealTextImages();
     } else if(speechResult.includes("вальдшне")) {
@@ -212,7 +221,7 @@ addStateHandler(STATES.thinking, {
       console.log("main: thinking: matrix");
       showToken();
       setState(STATES.initial);
-    } else if (matchNext(speechResult) && matchInkeri(speechResult)) {
+    }  else if (matchNext(speechResult) && matchInkeri(speechResult)) {
       next((response) => {
         console.log("main: next [thinking]: response:", response);
         if (response.trim() != "") {
