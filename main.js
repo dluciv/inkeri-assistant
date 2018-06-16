@@ -515,17 +515,18 @@ if (isAlwaysOn) {
 }
 
 window.tell = (text) => {
+  const text2 = text.toLowerCase().trim();
   if (isState(STATES.initial) || isState(STATES.listening)) {
     console.log("tell: -> thinking");
-    prevSpeechResult = text;
-    setState(STATES.thinking, text);
+    prevSpeechResult = text2;
+    setState(STATES.thinking, text2);
   }
   else if (isState(STATES.speaking)) {
     console.log("tell: -> tsss");
-    var stopWordMatched = matchStop(text);
-    var nextWordMatched = matchNext(text);
+    var stopWordMatched = matchStop(text2);
+    var nextWordMatched = matchNext(text2);
     if (nextWordMatched) {
-      setState(STATES.thinking, text);
+      setState(STATES.thinking, text2);
     }
     else if (stopWordMatched) {
       console.log('stop word matched');
