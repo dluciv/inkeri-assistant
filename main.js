@@ -523,12 +523,46 @@ if (isAlwaysOn) {
   startListening();
 }
 
+const tellJson = (json) => {
+  switch (json.type) {
+  case 'script':
+    if (json.commands) {
+      tellScript(json.commands);
+    }
+    break;
+  }
+}
+
+const tellScript = (commands) => {
+  console.log('tellScript: commands: ', commands);
+  commands.forEach((cmd) => {
+    if (cmd.time && cmd.command) {
+      const diff = moment(cmd.time, 'HH:mm:ss').diff(moment());
+      if (diff >= 0) {
+        setTimeout(() => {
+          window.tell(cmd.command);
+        }, diff);
+      }
+    }
+  });
+}
+
 window.tell = (text) => {
   const text2 = text.toLowerCase().trim();
   if (isState(STATES.initial) || isState(STATES.listening)) {
-    console.log("tell: -> thinking");
-    prevSpeechResult = text2;
-    setState(STATES.thinking, text2);
+    let parsedText = null;
+    try {
+      parsedText = JSON.parse(text2.replace(/(['"])?([a-zA-Z_]+)(['"])?\s*:/g, '"$2": '));
+    }
+    catch (e) {}
+    if (parsedText) {
+      tellJson(parsedText);
+    }
+    else {
+      console.log("tell: -> thinking");
+      prevSpeechResult = text2;
+      setState(STATES.thinking, text2);
+    }
   }
   else if (isState(STATES.speaking)) {
     console.log("tell: -> tsss");
