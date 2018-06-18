@@ -158,3 +158,12 @@ export async function showToken() {
     $("#authToken").text(token.slice(0, 6)).toggle(true);
   }
 }
+
+// From https://stackoverflow.com/questions/30970068/js-regex-url-validation
+export function isValidUrl(str) {
+  var res = str.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
+  if(res == null)
+    return false;
+  else
+    return true;
+}

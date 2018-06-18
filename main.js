@@ -5,7 +5,7 @@ import { loadWeather } from './weather.js';
 import { search, next } from './search.js';
 import { loadKriperStory } from './kriper.js';
 import { randomSpeech, REMEMBER_PROBABILITY } from './self.js';
-import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, showImages, stopImages, showToken } from './misc.js';
+import { declinateUnit, t_ga, response_default_template, log_for_user, getUrlVars, showImages, stopImages, showToken, isValidUrl } from './misc.js';
 import { matchInkeri, matchInkeriAny, matchStop, matchStopAny, matchNext, matchNextAny } from './words.js';
 import { init as initPushes, onEvent as onPushEvent } from './push.js';
 import { readUrl } from './reader.js';
@@ -182,7 +182,7 @@ addStateHandler(STATES.thinking, {
   onAfter: (stOld, stNew, speechResult) => {
     var response;
     var images = [];
-    if (speechResult.startsWith("say ")) {
+    if (speechResult.startsWith("say ") || speechResult.startsWith("скажи ")) {
       const t = speechResult.slice(4).trim();
       if (t != "") {
         setState(STATES.speaking, {
@@ -480,24 +480,7 @@ loadZombieProbability();
 initPushes();
 onPushEvent('url', (event) => {
   console.log('main: push event: [url]: ', event);
-
-  if (isState(STATES.initial) || isState(STATES.listening)) {
-    readUrl(event.data, (response, images) => {
-      console.log("main: push event: [url]: response: ", response.trim());
-      if (response.trim() != "") {
-        setState(STATES.speaking, {
-          text: response,
-          images: (images ? images : [])
-        });
-      }
-      else {
-        setState(STATES.initial);
-      }
-    });
-  }
-  else {
-    console.log('main: push event: [url]: ', event, 'wrong state');
-  }
+  tellUrl(event.data);
 });
 onPushEvent('message', (event) => {
   console.log('main: push event: [message]: ', event);
@@ -523,8 +506,40 @@ if (isAlwaysOn) {
   startListening();
 }
 
+const tellUrl = (url) => {
+  if (isState(STATES.initial) || isState(STATES.listening)) {
+    return new Promise((resolve) => {
+      readUrl(url, (response, images) => {
+        console.log("main: tellUrl:  response: ", response.trim());
+        if (response.trim() != "") {
+          let uss = addStateHandler(getState(), {
+            onAfter: (stOld, stNew) => {
+              uss();
+              console.log('tellUrl: done');
+              resolve();
+            }
+          });
+
+          setState(STATES.speaking, {
+            text: response,
+            images: (images ? images : [])
+          });
+        }
+        else {
+          setState(STATES.initial);
+          resolve();
+        }
+      });
+    });
+  }
+  else {
+    console.log('main: tellUrl: ', url, 'wrong state');
+    return Promise.resolve();
+  }
+}
+
 // JSON samples:
-// '{ type : "script", commands: [ { time: "12:42:00", command: "say тюлень" }, { time: "12:42:30", command: "say кулебяка" } ] }'
+// '{ type : "script", commands: [ { time: "12:42:00", command: "say тюлень" }, { time: "12:42:и30", command: "say кулебяка" } ] }'
 // '{ type : "script", commands: [ { offset: 1, command: "say тюлень" }, { offset: 2, command: "say кулебяка" } ] }' - offsets in seconds
 // '{ type : "script", commands: [ { offset: 1, commands: ["say тюлень", "say кулебяка"] } ] }'
 const tellJson = (json) => {
@@ -570,7 +585,6 @@ const tellScript = (commands) => {
 }
 
 const tellScriptEntry = (command) => {
-  
 }
 
 window.tell = (text) => {
@@ -584,6 +598,9 @@ window.tell = (text) => {
 
     if (parsedText) {
       return tellJson(parsedText);
+    }
+    else if (isValidUrl(text2)) {
+      return tellUrl(text2);
     }
     else {
       console.log("tell: -> thinking");
