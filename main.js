@@ -523,6 +523,9 @@ if (isAlwaysOn) {
   startListening();
 }
 
+// JSON samples:
+// '{ type : "script", commands: [ { time: "12:42:00", command: "say тюлень" }, { time: "12:42:30", command: "say кулебяка" } ] }'
+// '{ type : "script", commands: [ { offset: 1, command: "say тюлень" }, { offset: 2, command: "say кулебяка" } ] }' - offsets in seconds
 const tellJson = (json) => {
   switch (json.type) {
   case 'script':
@@ -543,6 +546,11 @@ const tellScript = (commands) => {
           window.tell(cmd.command);
         }, diff);
       }
+    }
+    else if (cmd.offset && cmd.command) {
+      setTimeout(() => {
+        window.tell(cmd.command);
+      }, cmd.offset * 1000);
     }
   });
 }
