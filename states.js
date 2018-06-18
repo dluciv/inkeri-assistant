@@ -23,22 +23,41 @@ _.each(STATES, (st) => {
 // state    : one of STATES
 // handlers : { onBefore: (old, new, data) -> void , onAfter : (old, new, data) -> void, onExitBefore : (old, new, data) -> void, onExitAfter : (old, new, data) -> void} 
 var addHandler = function(state, handlers) {
+  var unsubscribers = [];
+
   if (_.includes(STATES, state)) {
     if (handlers.onBefore) {
       handlers_before[state].push(handlers.onBefore);
+      unsubscribers.push(() => {
+        _.pull(handlers_before[state], handlers.onBefore);
+      });
     }
     if (handlers.onAfter) {
       handlers_after[state].push(handlers.onAfter);
+      unsubscribers.push(() => {
+        _.pull(handlers_after[state], handlers.onAfter);
+      });
     }
     if (handlers.onExitBefore) {
       handlers_before_exit[state].push(handlers.onExitBefore);
+      unsubscribers.push(() => {
+        _.pull(handlers_before_exit[state], handlers.onExitBefore);
+      });
     }
     if (handlers.onExitAfter) {
       handlers_after_exit[state].push(handlers.onExitAfter);
+      unsubscribers.push(() => {
+        _.pull(handlers_after_exit[state], handlers.onExitAfter);
+      });
     }
+
+    return () => {
+      unsubscribers.forEach((uss) => uss());
+    };
   }
   else {
     console.log('states: addHandler: undefined state: ', state);
+    return () => {}
   }
 }
 
@@ -53,12 +72,12 @@ var set = function(state, data) {
       return;
     }
     
-    _.each(handlers_before_exit[oldState], (h) => h(oldState, state, data));
-    _.each(handlers_before[state], (h) => h(oldState, state, data));
+    _.each(handlers_before_exit[oldState], (h) => { if (h) h(oldState, state, data) });
+    _.each(handlers_before[state], (h) => { if (h) h(oldState, state, data) });
     currentState = state;
     console.log('state: ', oldState, ' -> ', state, ' ; [', data ? data : '', ']');
-    _.each(handlers_after_exit[oldState], (h) => h(oldState, state, data));
-    _.each(handlers_after[state], (h) => h(oldState, state, data));
+    _.each(handlers_after_exit[oldState], (h) => { if(h) h(oldState, state, data) });
+    _.each(handlers_after[state], (h) => { if (h) h(oldState, state, data) });
   }
   else {
     console.log('states: set: undefined state: ', state);

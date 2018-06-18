@@ -526,12 +526,16 @@ if (isAlwaysOn) {
 // JSON samples:
 // '{ type : "script", commands: [ { time: "12:42:00", command: "say тюлень" }, { time: "12:42:30", command: "say кулебяка" } ] }'
 // '{ type : "script", commands: [ { offset: 1, command: "say тюлень" }, { offset: 2, command: "say кулебяка" } ] }' - offsets in seconds
+// '{ type : "script", commands: [ { offset: 1, commands: ["say тюлень", "say кулебяка"] } ] }'
 const tellJson = (json) => {
   switch (json.type) {
   case 'script':
     if (json.commands) {
-      tellScript(json.commands);
+      return tellScript(json.commands);
     }
+    break;
+  default:
+    return Promise.resolve();
     break;
   }
 }
@@ -552,7 +556,21 @@ const tellScript = (commands) => {
         window.tell(cmd.command);
       }, cmd.offset * 1000);
     }
+    else if (cmd.offset && cmd.commands) {
+      setTimeout(async () => {
+        for (const cmdcmd of cmd.commands) {
+          await window.tell(cmdcmd);
+          console.log('tellScript: done command: ', cmdcmd);
+        }
+      }, cmd.offset * 1000);
+    }
   });
+
+  return Promise.resolve(); // Script resolves immediately
+}
+
+const tellScriptEntry = (command) => {
+  
 }
 
 window.tell = (text) => {
@@ -563,28 +581,59 @@ window.tell = (text) => {
       parsedText = JSON.parse(text2.replace(/(['"])?([a-zA-Z_]+)(['"])?\s*:/g, '"$2": '));
     }
     catch (e) {}
+
     if (parsedText) {
-      tellJson(parsedText);
+      return tellJson(parsedText);
     }
     else {
       console.log("tell: -> thinking");
       prevSpeechResult = text2;
-      setState(STATES.thinking, text2);
+
+      return new Promise((resolve) => {
+        let uss = addStateHandler(getState(), {
+          onAfter: (stOld, stNew) => {
+            uss();
+            console.log('tell: done');
+            resolve();
+          }
+        });
+
+        setState(STATES.thinking, text2);
+      });
     }
   }
   else if (isState(STATES.speaking)) {
     console.log("tell: -> tsss");
     var stopWordMatched = matchStop(text2);
     var nextWordMatched = matchNext(text2);
-    if (nextWordMatched) {
-      setState(STATES.thinking, text2);
-    }
-    else if (stopWordMatched) {
-      console.log('stop word matched');
-      tssss();
-    }
+
+    return new Promise((resolve) => {
+      let uss0 = addStateHandler(STATES.initial, {
+        onAfter: (stOld, stNew) => {
+          uss0(); uss1();
+          console.log('tell: done');
+          resolve();
+        }
+      });
+      let uss1 = addStateHandler(STATES.initial, {
+        onAfter: (stOld, stNew) => {
+          uss0(); uss1();
+          console.log('tell: done');
+          resolve();
+        }
+      });
+
+      if (nextWordMatched) {
+        setState(STATES.thinking, text2);
+      }
+      else if (stopWordMatched) {
+        console.log('stop word matched');
+        tssss();
+      }
+    });
   }
   else {
     console.log("tell: status: " + getState());
+    return Promise.resolve();
   }
 }
