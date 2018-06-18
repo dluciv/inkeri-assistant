@@ -558,25 +558,17 @@ const tellJson = (json) => {
 const tellScript = (commands) => {
   console.log('tellScript: commands: ', commands);
   commands.forEach((cmd) => {
-    if (cmd.time && cmd.command) {
+    if (cmd.time) {
       const diff = moment(cmd.time, 'HH:mm:ss').diff(moment());
       if (diff >= 0) {
         setTimeout(() => {
-          window.tell(cmd.command);
+          tellScriptEntry(cmd);
         }, diff);
       }
     }
-    else if (cmd.offset && cmd.command) {
+    else if (cmd.offset) {
       setTimeout(() => {
-        window.tell(cmd.command);
-      }, cmd.offset * 1000);
-    }
-    else if (cmd.offset && cmd.commands) {
-      setTimeout(async () => {
-        for (const cmdcmd of cmd.commands) {
-          await window.tell(cmdcmd);
-          console.log('tellScript: done command: ', cmdcmd);
-        }
+        tellScriptEntry(cmd);
       }, cmd.offset * 1000);
     }
   });
@@ -584,7 +576,17 @@ const tellScript = (commands) => {
   return Promise.resolve(); // Script resolves immediately
 }
 
-const tellScriptEntry = (command) => {
+const tellScriptEntry = async (entry) => {
+  if (entry.command) {
+    window.tell(entry.command);
+    console.log('tellScript: done command: ', entry.command);
+  }
+  else if (entry.commands) {
+    for (const cmd of entry.commands) {
+      await window.tell(cmd);
+      console.log('tellScript: done command: ', cmd);
+    }
+  }
 }
 
 window.tell = (text) => {
