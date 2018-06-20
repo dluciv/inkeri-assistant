@@ -182,6 +182,7 @@ addStateHandler(STATES.thinking, {
   onAfter: (stOld, stNew, speechResult) => {
     var response;
     var images = [];
+    console.log(speechResult);
     if (speechResult.startsWith("say ") || speechResult.startsWith("скажи ")) {
       const t = speechResult.slice(4).trim();
       if (t != "") {
@@ -191,7 +192,21 @@ addStateHandler(STATES.thinking, {
         });
       }
     }
-    else if(speechResult.includes("тюлен") || speechResult.includes("нерп")) {
+    else if (speechResult.startsWith("img ")) {
+      console.log('Showing image')
+      const t = speechResult.slice(4).trim();
+      if (t != "") {
+        showImages([ t ]);
+        setState(STATES.initial);
+        return;
+      }
+    }
+    else if (matchStop(speechResult)) {
+      console.log('stop');
+      tssss();
+      return;
+    }
+    else if (speechResult.includes("тюлен") || speechResult.includes("нерп")) {
       response = getSealText();
       images = getSealTextImages();
     } else if(speechResult.includes("вальдшне")) {
@@ -412,12 +427,13 @@ var startRemembering = function() {
 var tssss = function() {
   if (isState(STATES.initial)) {
     startListening();
-  } else if (isState(STATES.speaking) || isState(STATES.listening)) {
+  } else if (isState(STATES.speaking) || isState(STATES.listening) || (isState(STATES.thinking))) {
     setState(STATES.initial);
   }
   else {
     console.log('tssss: wrong state');
   }
+  stopImages();
 }
 
 var status_template = _.template("Привет! Говорит И́нкери Норпа Лехтокурпа. <%= weather %> <%= seals %> <%= seals_back %> <%= woodcocks %> <%= zombies %> Спасибо, всего доброго!");
@@ -542,6 +558,7 @@ const tellUrl = (url) => {
 // '{ type : "script", commands: [ { time: "12:42:00", command: "say тюлень" }, { time: "12:42:и30", command: "say кулебяка" } ] }'
 // '{ type : "script", commands: [ { offset: 1, command: "say тюлень" }, { offset: 2, command: "say кулебяка" } ] }' - offsets in seconds
 // '{ type : "script", commands: [ { offset: 1, commands: ["say тюлень", "say кулебяка"] } ] }'
+// '{ type : "script", commands: [ { offset: 1, commands: ["img https://static.1000.menu/img/content/21268/golyi-tort-s-fruktami-svadebnyi-recept-s-foto_1499683557_37_max.jpg", "торт", "спасибо", "say а теперь про тюленей", "тюлень"] } ] }'
 const tellJson = (json) => {
   switch (json.type) {
   case 'script':
@@ -591,10 +608,11 @@ const tellScriptEntry = async (entry) => {
 
 window.tell = (text) => {
   const text2 = text.toLowerCase().trim();
+  console.log('tell: ', text2);
   if (isState(STATES.initial) || isState(STATES.listening)) {
     let parsedText = null;
     try {
-      parsedText = JSON.parse(text2.replace(/(['"])?([a-zA-Z_]+)(['"])?\s*:/g, '"$2": '));
+      parsedText = JSON.parse(text2.replace('https:', '#HTTPS;').replace('http:', '#HTTP;').replace(/(['"])?([a-zA-Z_]+)(['"])?\s*:/g, '"$2": ').replace('#HTTP;', 'http:').replace('#HTTPS;', 'https:'));
     }
     catch (e) {}
 
