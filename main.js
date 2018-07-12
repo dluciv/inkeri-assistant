@@ -665,7 +665,15 @@ window.tell = (text) => {
       });
 
       if (nextWordMatched) {
-        setState(STATES.thinking, text2);
+        next((response) => {
+          console.log("main: tell: next [speaking]: response: ", response);
+          if (response.trim() != "") {
+            setState(STATES.thinking, response);
+          }
+          else {
+            setState(STATES.initial);
+          }
+        });
       }
       else if (stopWordMatched) {
         console.log('stop word matched');
