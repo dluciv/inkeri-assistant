@@ -1,0 +1,307 @@
+const _ = require('lodash');
+const pg = require('pg')
+
+const { Synapse } = require('./synapse');
+const { Connection } = require('./connection');
+
+const TRAIN_SPEED = 0.5;
+
+const Network = class {
+  constructor(width, height) {
+    if (width === undefined || height === undefined) {
+      // loading the network state
+      this.id = null;
+      this.levels = [];
+      this.width = 0;
+      this.height = 0;
+      this.parentId = null;
+    }
+    else {
+      this.id = null;
+      this.levels = [];
+      this.width = width;
+      this.height = height;
+      this.parentId = null;
+
+      for (var i = 0; i < height; i++) {
+        var level = [];
+
+        if (i != height - 1 && i != 0) {
+          var syn = new Synapse(i * (width + 1), true);
+
+          level.push(syn);
+        }
+
+        for (var j = 0; j < width; j++) {
+          var syn = new Synapse(i * (width + 1) + j + 1);
+
+          if (i > 0) {
+            this.levels[i-1].forEach((syn2) => {
+              var conn = new Connection(Math.random() - 0.5);
+              syn2.outputs.push(syn);
+              syn2.outputConnections[syn.id] = conn;
+              syn.inputs.push(syn2);
+              syn.inputConnections[syn2.id] = conn;
+            });
+          }
+
+          level.push(syn);
+        }
+
+        this.levels.push(level);
+      }
+    }
+  }
+
+  calculate(input) {
+    for (var i = 0; i < Math.min(input.length, this.levels[0].length); i++) {
+      this.levels[0][i].output = input[i];
+    }
+
+    this.levels.slice(1).forEach((level) => level.forEach((syn) => syn.update()));
+
+    return this.levels[this.levels.length - 1].map((syn) => syn.output);
+  }
+
+  train(input, expectedResult) {
+    this.calculate(input); // to update .output fields of neurons
+    
+    // calculating errors/deltas
+    for (var i = this.levels.length - 1; i > 0; i--) {
+      var isLastLevel = i == this.levels.length - 1;
+      var level = this.levels[i];
+      // if (isLastLevel) {
+      //   level = _.filter(level, (syn, j) => expectedResult[j] != null)
+      // }
+
+      level.forEach((syn, j) => {
+        var err;
+        if (isLastLevel) {
+          const eres = expectedResult[j];
+          if (eres != null) {
+            err = syn.calculateError(eres);
+          }
+          else {
+            err = syn.calculateError(syn.output);
+          }
+        }
+        else {
+          err = syn.calculateError();
+        }
+        _.each(syn.inputs, (syn2) => {
+          var conn = syn.inputConnections[syn2.id];
+          conn.diff = TRAIN_SPEED * err * syn2.output;
+        });
+      });
+    }
+
+    // applying deltas
+    for (var i = this.levels.length - 1; i > 0; i--) {
+      var level = this.levels[i];
+
+      level.forEach((syn, j) => {
+        _.each(syn.inputs, (syn2) => {
+          var conn = syn.inputConnections[syn2.id];
+          conn.coeff = conn.coeff + conn.diff;
+        });
+      });
+    }
+  }
+
+  log() {
+    this.levels.forEach((level) => {
+      var str = level.reduce((acc, syn) => {
+        return acc + ((syn.output > 0.3) ? "#" : "=")
+      }, "");
+      console.log(str);
+    });
+  }
+  logFull() {
+    console.log("Full network:");
+    console.log("-------------");
+    this.levels.forEach((level) => {
+      var str = level.reduce((acc, syn) => {
+        return acc + " | " + (syn.isShift? "s" : "") + syn.output;
+      }, "");
+      console.log(str);
+      level.forEach((syn) => {
+        if (_.size(syn.outputConnections) > 0) {
+          var str = _.reduce(syn.outputConnections, (acc, conn) => {
+            return acc + " ; " + conn.coeff;
+          }, "");
+          console.log(str);
+        }
+      });
+    });
+    console.log("-------------");
+  }
+  logPart(ncol) {
+    this.levels.forEach((level) => {
+      // console.log('w: ', level.length);
+      var str = level.reduce((acc, syn) => {
+        return acc + " | " + (syn.isShift? "s" : "") + syn.output;
+      }, "");
+      console.log(str);
+      level.slice(0, ncol).forEach((syn) => {
+        if (_.size(syn.outputConnections) > 0) {
+          var str = _.reduce(_.slice(_.values(syn.outputConnections), 0, ncol), (acc, conn) => {
+            return acc + " ; " + conn.coeff;
+          }, "");
+          console.log(str);
+        }
+      });
+    });
+  }
+
+  toJSON() {
+    return {
+      width: this.width,
+      height: this.height,
+      levels: this.levels.map((level) => level.length),
+      connections: this.levels.map((level) => level.map((syn) => _.map(syn.outputConnections, (conn) => conn.coeff)))
+    }
+  }
+
+  loadFromDbRow(row) {
+    let conf = row.state;
+
+    this.id = row.id;
+    this.width = conf.width;
+    this.height = conf.height;
+    this.parentId = row.parent_id;
+
+    this.levels = [];
+    conf.connections.forEach((level, levelIdx) => {
+      let newLevel = level.map((syn, synIdx) => new Synapse(levelIdx * (this.width + 1) + synIdx));
+      this.levels.push(newLevel);
+
+      if (levelIdx > 0) {
+        let prevNewLevel = this.levels[levelIdx - 1];
+        let prevLevel = conf.connections[levelIdx - 1];
+
+        prevNewLevel.forEach((newSyn2, synIdx) => {
+          let syn2 = prevLevel[synIdx];
+          syn2.forEach((connCoeff, connIdx) => {
+            let conn = new Connection(connCoeff);
+            let newSyn = (levelIdx == conf.connections.length - 1) ? newLevel[connIdx] : newLevel[connIdx + 1]; // +1 - because of a shift synapse (except the last level - it does not have it)
+            newSyn2.outputs.push(newSyn);
+            newSyn2.outputConnections[newSyn.id] = conn;
+            newSyn.inputs.push(newSyn2);
+            newSyn.inputConnections[newSyn2.id] = conn;
+            if (synIdx <= 5 && connIdx <= 5) {
+              console.log('load: ', newSyn2.id, ' -> ', newSyn.id, ' ; ', conn.coeff, levelIdx, synIdx);
+            }
+          });
+        });
+      }
+    });
+  }
+
+  async load() {
+    const dbClient = new pg.Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: false,
+    });
+    await dbClient.connect();
+
+    var dbRes = await dbClient.query("SELECT * FROM global_state WHERE key = 'nn_training_on';");
+    if (!dbRes || dbRes.rows.length == 0) {
+      throw 'NN configuration error. No nn_training_on setting.';
+    }
+
+    const nn_training_on = dbRes.rows[0].value;
+    if (nn_training_on) {
+      dbRes = await dbClient.query('SELECT * FROM nn_states ORDER BY id desc limit 1;');
+    }
+    else {
+      dbRes = await dbClient.query('SELECT * FROM nn_states WHERE stable = TRUE ORDER BY id desc limit 1;');
+    }
+    console.log(dbRes);
+
+    if (dbRes.rows.length == 0) {
+        console.log("No NN configuration found");
+        throw "No NN configuration found";
+    }
+
+    await dbClient.end();
+
+    this.loadFromDbRow(dbRes.rows[0]);
+
+    return this;
+  }
+
+  async loadById(id, callback) {
+    const dbClient = new pg.Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: false,
+    });
+    await dbClient.connect();
+    
+    dbRes = this.dbClient.query('SELECT * FROM nn_states WHERE id = $1;', [ id ]);
+    console.log(dbRes);
+
+    if (dbRes.rows.length == 0) {
+        console.log("No NN configuration found");
+        throw "No NN configuration found";
+    }
+
+    await dbClient.end();
+
+    this.loadFromDbRow(dbRes.rows[0]);
+
+    return this;
+  }
+
+
+  equals(network) {
+    if (this.width != network.width || this.height != network.height) {
+      console.log('equals: different sizes: ', this.width, network.width, this.height, network.height);
+      return false;
+    }
+
+    for (var levelIdx in this.levels) {
+      let level0 = this.levels[levelIdx];
+      let level1 = network.levels[levelIdx]
+      if (level0.length != level1.length) {
+        console.log('equals: different level sizes: ', levelIdx, level0.length, level1.length);
+        return false;
+      }
+
+      for (var synIdx in level0) {
+        let syn0 = level0[synIdx];
+        let syn1 = level1[synIdx];
+
+        let oc0 = _.values(syn0.outputConnections);
+        let oc1 = _.values(syn1.outputConnections);
+        let ic0 = _.values(syn0.inputConnections);
+        let ic1 = _.values(syn1.inputConnections);
+        for (var connIdx in oc0) {
+          let conn0 = oc0[connIdx];
+          let conn1 = oc1[connIdx];
+
+          if (conn0.coeff != conn1.coeff) {
+            console.log('equals: different output connections: ', syn0.id, syn1.id, synIdx, levelIdx, conn0.coeff, conn1.coeff);
+            console.log('equals: different output connections: connections: 0: ', _.slice(syn0.outputConnections, 0, 10));
+            console.log('equals: different output connections: connections: 1: ', _.slice(syn1.outputConnections, 0, 10));
+            return false;
+          }
+        }
+        for (var connIdx in ic0) {
+          let conn0 = ic0[connIdx];
+          let conn1 = ic1[connIdx];
+
+          if (conn0.coeff != conn1.coeff) {
+            console.log('equals: different input connections: ', syn0.id, syn1.id, synIdx, levelIdx, conn0.coeff, conn1.coeff);
+            console.log('equals: different input connections: connections: 0: ', _.slice(ic0, 0, 10));
+            console.log('equals: different input connections: connections: 1: ', _.slice(ic1, 0, 10));
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+}
+
+exports.Network = Network;

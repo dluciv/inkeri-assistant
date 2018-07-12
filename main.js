@@ -10,6 +10,7 @@ import { matchInkeri, matchInkeriAny, matchStop, matchStopAny, matchNext, matchN
 import { init as initPushes, onEvent as onPushEvent } from './push.js';
 import { readUrl } from './reader.js';
 import { initTodoist, onTask } from './todoist.js';
+import { init as initNeuro, query as queryNeuro } from './neuro/index.js';
 
 // -- To Force https ------------------------------
 // -- https://stackoverflow.com/a/4723302/539470 --
@@ -517,6 +518,9 @@ onTask((task) => {
   console.log('todoist task: ', task.content);
   window.tell(task.content);
 });
+
+initNeuro();
+window.queryNeuro = queryNeuro;
 
 if (isAlwaysOn) {
   startListening();
