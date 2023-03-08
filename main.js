@@ -11,6 +11,7 @@ import { init as initPushes, onEvent as onPushEvent } from './push.js';
 import { readUrl } from './reader.js';
 import { initTodoist, onTask } from './todoist.js';
 import { init as initNeuro, query as queryNeuro } from './neuro/index.js';
+import { VOICE_NAME } from './settings.js'
 
 // -- To Force https ------------------------------
 // -- https://stackoverflow.com/a/4723302/539470 --
@@ -155,6 +156,8 @@ if (recognition2) {
   }
 }
 
+
+
 addStateHandler(STATES.listening, {
   onAfter: (stOld, stNew) => {
     console.log('main: started listening');
@@ -179,49 +182,134 @@ addStateHandler(STATES.listening, {
   }
 });
 
-addStateHandler(STATES.thinking, {
-  onAfter: (stOld, stNew, speechResult) => {
-    var response;
-    var images = [];
-    console.log(speechResult);
-    if (speechResult.startsWith("say ") || speechResult.startsWith("скажи ")) {
-      const t = speechResult.slice(4).trim();
-      if (t != "") {
+let chatInitialized = false;
+
+const onAfterThinking  = (speechResult, resetState) => {
+  var response;
+  var images = [];
+  console.log('onAfterThinking: speechResult:', speechResult);
+  if (speechResult.startsWith("gpt ")) {
+    const t = speechResult.slice(4).trim();
+    if (t != "") {
+      const exec = () => {
+        fetch('http://localhost:5000/chat?q=' + encodeURIComponent(t))
+        .then(resp => resp.text())
+        .then(resp => {
+          console.log('response:', resp);
+
+          const json = JSON.parse(resp);
+          if (!json.response) {
+            return;
+          }
+
+          setState(STATES.speaking, {
+            text: json.response,
+            images: [],
+            resetState: resetState
+          });
+        });
+      };
+
+      if (!chatInitialized) {
+        fetch('http://localhost:5000/chat-init', {
+          method: 'POST',
+          body: JSON.stringify({
+            female: true,
+            name: 'Инкери'
+          }),
+          headers: {
+            'Content-type': 'application/json; charset=UTF-8',
+          },
+          cache: "no-cache"
+        })
+        .then(iresp => iresp.text())
+        .then(iresp => {
+          chatInitialized = true;
+          console.log('chat initialized', iresp);
+
+          exec();
+        });
+      }
+      else {
+        exec();
+      }
+    }
+
+    return;
+  }
+  else if (speechResult.startsWith("say ") || speechResult.startsWith("скажи ")) {
+    const t = speechResult.slice(4).trim();
+    if (t != "") {
+      setState(STATES.speaking, {
+        text: t,
+        images: [],
+        resetState: resetState
+      });
+    }
+  }
+  else if (speechResult.startsWith("img ")) {
+    console.log('Showing image')
+    const t = speechResult.slice(4).trim();
+    if (t != "") {
+      showImages([ t ]);
+      setState(STATES.initial);
+      return;
+    }
+  }
+  else if (matchStop(speechResult)) {
+    console.log('stop');
+    tssss();
+    return;
+  }
+  else if (speechResult.includes("тюлен") || speechResult.includes("нерп")) {
+    response = getSealText();
+    images = getSealTextImages();
+  } else if(speechResult.includes("вальдшне")) {
+    response = woodcocks;
+  } else if(speechResult.includes("зомби")) {
+    response = getZombies();
+    images = getZombieTextImages();
+  } else if(speechResult.includes("погод")) {
+    response = weather;
+  } else if(speechResult.includes("статус") || speechResult.includes("обстановк")) {
+    response = get_status();
+  } else if(speechResult.includes("крипер") || speechResult.includes("страш")) {
+    loadKriperStory((response) => {
+      console.log("main: thinking: kriper: response: ", response);
+      if (response.trim() != "") {
         setState(STATES.speaking, {
-          text: t,
+          text: response,
           images: []
         });
       }
-    }
-    else if (speechResult.startsWith("img ")) {
-      console.log('Showing image')
-      const t = speechResult.slice(4).trim();
-      if (t != "") {
-        showImages([ t ]);
+      else {
         setState(STATES.initial);
-        return;
       }
-    }
-    else if (matchStop(speechResult)) {
-      console.log('stop');
-      tssss();
-      return;
-    }
-    else if (speechResult.includes("тюлен") || speechResult.includes("нерп")) {
-      response = getSealText();
-      images = getSealTextImages();
-    } else if(speechResult.includes("вальдшне")) {
-      response = woodcocks;
-    } else if(speechResult.includes("зомби")) {
-      response = getZombies();
-      images = getZombieTextImages();
-    } else if(speechResult.includes("погод")) {
-      response = weather;
-    } else if(speechResult.includes("статус") || speechResult.includes("обстановк")) {
-      response = get_status();
-    } else if(speechResult.includes("крипер") || speechResult.includes("страш")) {
-      loadKriperStory((response) => {
-        console.log("main: thinking: kriper: response: ", response);
+    });
+    return;
+  } else if (speechResult.includes("матриц") || speechResult.includes("matrix")) {
+    console.log("main: thinking: matrix");
+    showToken();
+    setState(STATES.initial);
+  }  else if (matchNext(speechResult) && matchInkeri(speechResult)) {
+    next((response) => {
+      console.log("main: next [thinking]: response:", response);
+      if (response.trim() != "") {
+        setState(STATES.speaking, {
+          text: response,
+          images: []
+        });
+      }
+      else {
+        setState(STATES.initial);
+      }
+    });
+    return;
+  } else if(isAlwaysOn && matchInkeri(speechResult)) {
+    search(
+      speechResult,
+      (response) => {
+        console.log("main: thinking: inkeri: response: ", response);
         if (response.trim() != "") {
           setState(STATES.speaking, {
             text: response,
@@ -232,14 +320,13 @@ addStateHandler(STATES.thinking, {
           setState(STATES.initial);
         }
       });
-      return;
-    } else if (speechResult.includes("матриц") || speechResult.includes("matrix")) {
-      console.log("main: thinking: matrix");
-      showToken();
-      setState(STATES.initial);
-    }  else if (matchNext(speechResult) && matchInkeri(speechResult)) {
-      next((response) => {
-        console.log("main: next [thinking]: response:", response);
+    return;      
+  } else if(speechResult != "") {
+    t_ga('speech_recognition', 'unknown_phrase', speechResult);
+    search(
+      speechResult,
+      (response) => {
+        console.log("main: thinking: unknown: response: ", response);
         if (response.trim() != "") {
           setState(STATES.speaking, {
             text: response,
@@ -250,115 +337,91 @@ addStateHandler(STATES.thinking, {
           setState(STATES.initial);
         }
       });
-      return;
-    } else if(isAlwaysOn && matchInkeri(speechResult)) {
-      search(
-        speechResult,
-        (response) => {
-          console.log("main: thinking: inkeri: response: ", response);
-          if (response.trim() != "") {
-            setState(STATES.speaking, {
-              text: response,
-              images: []
-            });
-          }
-          else {
-            setState(STATES.initial);
-          }
-        });
-      return;      
-    } else if(speechResult != "") {
-      t_ga('speech_recognition', 'unknown_phrase', speechResult);
-      search(
-        speechResult,
-        (response) => {
-          console.log("main: thinking: unknown: response: ", response);
-          if (response.trim() != "") {
-            setState(STATES.speaking, {
-              text: response,
-              images: []
-            });
-          }
-          else {
-            setState(STATES.initial);
-          }
-        });
-      return;
-    }
-    else {
-      return;
-    }
+    return;
+  }
+  else {
+    return;
+  }
 
-    if (response != "") {
-      setState(STATES.speaking, {
-        text: response,
-        images: images
-      });
-    }
-    else {
-      setState(STATES.initial);
-    }
+  if (response != "") {
+    setState(STATES.speaking, {
+      text: response,
+      images: images
+    });
+  }
+  else {
+    setState(STATES.initial);
+  }
+}
+
+addStateHandler(STATES.thinking, {
+  onAfter: (stOld, stNew, sppechResult) =>  {
+    onAfterThinking(sppechResult, true);
   }
 });
 
-addStateHandler(STATES.speaking, {
-  onAfter: (stOld, stNew, data) => {
-    var textToSpeak = data.text;
-    try {
-      var synth = window.speechSynthesis;
-      var voices = synth.getVoices();
-      var ru_voices = voices.filter(function(v){
-        return v.lang.startsWith("ru");
-      });
-      var available_voices = ru_voices.length > 0 ? ru_voices : voices;
-      var voice = available_voices[0];
-      for(var v in available_voices){
-        if(available_voices[v].default)
-          voice = available_voices[v];
-      }
-      /*
-  Bad idea to use cloud syntheser on Desktop — Google does
-  not render it to the end. 
-  var bestvoice = "Google русский";
-  for(var v in voices){
-  if(voices[v].name == bestvoice)
-        voice = voices[v];
-  }
-      */
+const onAfterSpeaking = (textToSpeak, images, resetState) => {
+  console.log('onAfterSpeaking: textToSpeak:', textToSpeak);
+  try {
+    const synth = window.speechSynthesis;
 
-      // window, not var because onend does not trigger otherwise
-      // https://bugs.chromium.org/p/chromium/issues/detail?id=509488#c11
-      window.utterThis = new SpeechSynthesisUtterance(textToSpeak);
-      // utterThis.rate = 1.1;
-      utterThis.pitch = 1.4;
-      utterThis.lang = 'ru-RU';
-      utterThis.voice = voice;
+    // linux:
+    // :: chromium does not have built-in speech engine
+    // :: firefox-developer-edition optionally requires speech-dispatcher: Text-to-Speech
+    // :: qt5-speech optionally requires speech-dispatcher: speech-dispatcher TTS backend
+    // => speech-dispatcher is needed
+    // as speech engine RHVoice worked fine for me
 
-      utterThis.addEventListener('end', function () {
-        console.log('speaksmth: speech end');
-        setState(STATES.initial);
-      });
+    const voices = synth.getVoices();
+    const ru_voices = voices.filter(function(v){
+      return v.lang == 'ru' || v.lang == 'ru-RU';
+    });
+    const available_voices = ru_voices.length > 0 ? ru_voices : voices;
+    console.log('ru voices:', ru_voices);
+    console.log('all voices:', voices);
 
-      showImages(data.images);
-      synth.speak(utterThis);
-    } catch(e) {
-      console.log(e);
-      t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());
+    var voice = available_voices.find(v => v.name === VOICE_NAME) ?? available_voices.find(v => v.default) ?? available_voices[0];
+    console.log('voice:', voice);
+
+    // window, not var because onend does not trigger otherwise
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=509488#c11
+    window.utterThis = new SpeechSynthesisUtterance(textToSpeak);
+    utterThis.rate = 1.1;
+    utterThis.pitch = 1.4;
+    utterThis.lang = 'ru-RU';
+    utterThis.voice = voice;
+
+    utterThis.addEventListener('end', function () {
       setState(STATES.initial);
-    }
+    });
 
-    console.log("main: recogition2 start");
-    try {
-      recognition2.start();
-    }
-    catch (e) {
-      console.log("Error: main: cannot start recognition2", e);
-    }
+    showImages(images);
+    synth.speak(utterThis);
+  } catch(e) {
+    console.log(e);
+    t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());
+    setState(STATES.initial);
+  }
+
+  // console.log("main: recogition2 start");
+  // try {
+  //   recognition2.start();
+  // }
+  // catch (e) {
+  //   console.log("Error: main: cannot start recognition2", e);
+  // }
+}
+
+addStateHandler(STATES.speaking, {
+  onAfter: (stOld, stNew, data) =>  {
+    onAfterSpeaking(data.text, data.images, data.resetState);
   },
   onExitBefore: (stOld, stNew) => {
     speechSynthesis.cancel();
     console.log("main: recogition2 stop");
-    recognition2.stop();
+    if (recognition2) {
+      recognition2.stop();
+    }
     stopImages();
   }
 });
@@ -486,41 +549,47 @@ $(function() {
     e.preventDefault();
     startListening();
   });
+  $('#devInputBtn').click((e) => {
+    e.preventDefault();
+    const input = $('#devInputText')[0];
+    const text = input.value;
+    onAfterThinking(text, false);
+  });
 });
 
 setState(STATES.initial);
 
 loadWeather((w) => weather = w);
-loadSealStatus();
+// loadSealStatus();
 loadZombieProbability();
 
-initPushes();
-onPushEvent('url', (event) => {
-  console.log('main: push event: [url]: ', event);
-  tellUrl(event.data);
-});
-onPushEvent('message', (event) => {
-  console.log('main: push event: [message]: ', event);
-  tell(event.data);
-});
-onPushEvent('say', (event) => {
-  console.log('main: push event: [say]: ', event);
-  if (event.data.trim() != "") {
-    setState(STATES.speaking, {
-      text: event.data,
-      images: []
-    });
-  }
-});
+// initPushes();
+// onPushEvent('url', (event) => {
+//   console.log('main: push event: [url]: ', event);
+//   tellUrl(event.data);
+// });
+// onPushEvent('message', (event) => {
+//   console.log('main: push event: [message]: ', event);
+//   tell(event.data);
+// });
+// onPushEvent('say', (event) => {
+//   console.log('main: push event: [say]: ', event);
+//   if (event.data.trim() != "") {
+//     setState(STATES.speaking, {
+//       text: event.data,
+//       images: []
+//     });
+//   }
+// });
 
-initTodoist();
-onTask((task) => {
-  console.log('todoist task: ', task.content);
-  window.tell(task.content);
-});
+// initTodoist();
+// onTask((task) => {
+//   console.log('todoist task: ', task.content);
+//   window.tell(task.content);
+// });
 
-initNeuro();
-window.queryNeuro = queryNeuro;
+// initNeuro();
+// window.queryNeuro = queryNeuro;
 
 if (isAlwaysOn) {
   startListening();
