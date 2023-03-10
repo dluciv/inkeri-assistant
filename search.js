@@ -2,77 +2,76 @@ import { response_default_template, t_ga } from './misc.js';
 import { inkeris } from './words.js';
 import { BRAINS_BASE_URL } from './settings.js';
 
-var searchFull = function(text, idx, onSuccess, onError) {
-  $.ajax({
-    url: `${BRAINS_BASE_URL}short-thought?q=${encodeURIComponent(text)}` + ((idx === null) ? '' : `&idx=${idx}`),
-    method: 'GET',
-    xhrFields: {
-      withCredentials: true
-    },
-    dataType: 'json',
-    success: function(resp) {
-      let data = resp.response;
-      let longtext = resp.longtext;
-      if (longtext && longtext.length >= data.length) {
-        onSuccess(longtext);
-      } else if (data) {
-        t_ga('search', 'bad_or_small_full_search_long_response', resp.href);
-        onSuccess(data);
-      } else {
-        console.log('Error. Failed to parse response.\n', resp);
-        t_ga('search', 'bad_full_search_response', resp.toString());
-        onError();
-      }
-    },
-    error: function(err) {
-      console.log('Error. ', err);
-      t_ga('search', 'failed_to_get_response', err.toString());
-      onError();
+const searchFull = async (text, idx) => {
+  try {
+    const resp = await fetch(`${BRAINS_BASE_URL}short-thought?q=${encodeURIComponent(text)}` + ((idx === null) ? '' : `&idx=${idx}`), {
+      credentials: 'include'
+    });
+
+    const json = await resp.json();
+    const respText = json.response;
+    const longtext = json.longtext;
+
+    if (longtext && longtext.length >= data.length) {
+      return longtext;
     }
-  });
+    else if (respText) {
+      t_ga('search', 'bad_or_small_full_search_long_response', json.href);
+      return respText;
+    }
+    else {
+      console.log('Error. Failed to parse response.\n', json);
+      t_ga('search', 'bad_full_search_response', JSON.stringify(json));
+      throw 'Failed to parse response';
+    }
+  }
+  catch (error) {
+    console.log('Error. ', error);
+    t_ga('search', 'failed_to_get_response', error.toString());
+    throw error;
+  }
 }
 
-var storeAnswer = function(question, answer, engine) {
-  $.ajax({
-    url: `${BRAINS_BASE_URL}store-answer?format=json`,
-    method: 'GET',
-    xhrFields: {
-      withCredentials: true
-    },
-    data: {
-      q: question,
-      a: answer,
-      e: engine
-    },
-    success: function(resp) {
-      console.log('search: storeAnswer: saved.', resp);
-    },
-    error: function(err) {
-      console.log('search: storeAnswer: error:', err);
-    }
-  });
+const storeAnswer = async (question, answer, engine) => {
+  try {
+    const resp = await fetch(`${BRAINS_BASE_URL}store-answer?format=json`, {
+      method: 'POST',
+      credentials: 'include',
+      body: JSON.stringify({
+        q: question,
+        a: answer,
+        e: engine
+      })
+    });
+    
+    console.log('search: storeAnswer: saved.', resp);
+  }
+  catch (error) {
+    console.log('search: storeAnswer: error:', error);
+  }
 }
 
-var searchAnswer = function(text, onSuccess, onError) {
-  $.ajax({
-    url: 'https://cors-anywhere.herokuapp.com/https://api.duckduckgo.com/?q=' + encodeURIComponent(text) + '&format=json',
-    method: 'GET',
-    success: function(resp) {
-      var data = JSON.parse(resp);
-      if (data) {
-        onSuccess(data);
-      } else {
-        console.log('Error. Failed to parse response.\n', resp);
-        t_ga('search', 'bad_response', resp.toString());
-        onError();
-      }
-    },
-    error: function(err) {
-      console.log('Error. ', err);
-      t_ga('search', 'failed_to_get_response', err.toString());
-      onError();
+const searchAnswer = async (text) => {
+  try {
+    const resp = await fetch('https://cors-anywhere.herokuapp.com/https://api.duckduckgo.com/?q=' + encodeURIComponent(text) + '&format=json');
+    const data = await resp.json();
+
+    if (data) {
+      return data;
     }
-  });
+    else {
+      console.log('Error. Failed to parse response.\n', resp);
+      t_ga('search', 'bad_response', resp.toString());
+      
+      throw 'Failed to parse response';
+    }
+  }
+  catch (error) {
+    console.log('Error. ', error);
+    t_ga('search', 'failed_to_get_response', errortoString());
+    
+    throw error;
+  }
 }
 
 var clearSpeech = function(speechResult) {
@@ -98,102 +97,107 @@ var last_speechResultTrimmed = null;
 var lastSearchWasFull = false;
 var lastSearchResultIdx = -1;
 
-var search = function (speechResult, callback) {
-  var speechResultTrimmed = clearSpeech(speechResult);
-  t_ga('speech_recognition', 'question', speechResultTrimmed);
+export const search = async (speechResult) => {
+  try {
+    const speechResultTrimmed = clearSpeech(speechResult);
+    t_ga('speech_recognition', 'question', speechResultTrimmed);
 
-  searchAnswer(
-    speechResultTrimmed,
-    function(resp) {
-      // console.log(resp);
-      var response;
-      if (resp.AbstractText) {
-        console.log("search: from AbstractText");
-        let response = resp.AbstractText;
-        storeAnswer(speechResultTrimmed, response, 'duckduckgo');
+    const resp = await searchAnswer(speechResultTrimmed);
 
-        last_speechResultTrimmed = speechResultTrimmed;
-        lastSearchWasFull = false;
-        lastSearchResultIdx = -1;
+    if (resp.AbstractText) {
+      console.log("search: from AbstractText");
 
-        callback(response);
-      }
-      else if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
-        console.log("search: from RelatedTopics");
-        let response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
-        storeAnswer(speechResultTrimmed, response, 'duckduckgo');
-
-        last_speechResultTrimmed = speechResultTrimmed;
-        lastSearchWasFull = false;
-        lastSearchResultIdx = -1;
-
-        callback(response);
-      }
-      else {
-        console.log("search: full");
-        searchFull(speechResultTrimmed, null, (resp) => {
-          last_speechResultTrimmed = speechResultTrimmed;
-          lastSearchWasFull = true;
-          lastSearchResultIdx = -1;
-
-          callback(resp);
-        }, () => {
-          var response = response_default_template({ speechResult : speechResult });
-          storeAnswer(speechResultTrimmed, response, 'constant');
-
-          last_speechResultTrimmed = speechResultTrimmed;
-          lastSearchWasFull = true;
-          lastSearchResultIdx = -2;
-
-          callback(response);
-        });
-      }
-    },
-    function() {
-      var response = response_default_template({ speechResult : speechResult });
-      storeAnswer(speechResultTrimmed, response, 'constant');
+      const response = resp.AbstractText;
+      await storeAnswer(speechResultTrimmed, response, 'duckduckgo');
 
       last_speechResultTrimmed = speechResultTrimmed;
       lastSearchWasFull = false;
-      lastSearchResultIdx = -2;
+      lastSearchResultIdx = -1;
 
-      callback(response);
-    });
+      return response;
+    }
+
+    if (resp.RelatedTopics && Array.isArray(resp.RelatedTopics) && resp.RelatedTopics.length > 0 && resp.RelatedTopics[0].Result) {
+      console.log("search: from RelatedTopics");
+
+      const response = $("<span>" + resp.RelatedTopics[0].Result + "</span>").children('a[href*="duckduckgo.com/"]').remove().end().text();
+      await storeAnswer(speechResultTrimmed, response, 'duckduckgo');
+
+      last_speechResultTrimmed = speechResultTrimmed;
+      lastSearchWasFull = false;
+      lastSearchResultIdx = -1;
+
+      return response;
+    }
+
+    console.log("search: full");
+
+    const searchResp = await searchFull(speechResultTrimmed, null);
+    
+    last_speechResultTrimmed = speechResultTrimmed;
+    lastSearchWasFull = true;
+    lastSearchResultIdx = -1;
+
+    return searchResp;
+  }
+  catch (error) {
+    const response = response_default_template({ speechResult : speechResult });
+    try {
+      await storeAnswer(speechResultTrimmed, response, 'constant');
+    }
+    catch (error2) {
+      console.log('Error:', error2);
+    }
+
+    last_speechResultTrimmed = speechResultTrimmed;
+    lastSearchWasFull = true;
+    lastSearchResultIdx = -2;
+
+    return response;
+  }
 }
 
-var next = function(callback) {
+export const next = async () => {
   console.log('search: next: last_speechResultTrimmed: ', last_speechResultTrimmed);
   console.log('search: next: lastSearchResultIdx: ', lastSearchResultIdx);
   console.log('search: next: lastSearchWasFull: ', lastSearchWasFull);
-  if (lastSearchResultIdx < -1) {
-    var response = response_default_template({ speechResult : speechResult });
-    storeAnswer(last_speechResultTrimmed, response, 'constant');
+
+  try {
+    if (lastSearchResultIdx < -1) {
+      const response = response_default_template({ speechResult : speechResult });
+      await storeAnswer(last_speechResultTrimmed, response, 'constant');
+
+      // last_speechResultTrimmed = last_speechResultTrimmed;
+      lastSearchWasFull = false;
+      lastSearchResultIdx = -2;
+
+      return response;
+    }
+
+    const newIdx = lastSearchWasFull ? lastSearchResultIdx + 1 : 0;
+    const resp = await searchFull(last_speechResultTrimmed, newIdx);
+        
+    // last_speechResultTrimmed = last_speechResultTrimmed;
+    lastSearchWasFull = true;
+    lastSearchResultIdx = newIdx;
+
+    return resp;
+  }
+  catch (error) {
+    console.log('search: error:', error);
+
+    const response = response_default_template({ speechResult : speechResult });
+    try {
+      await storeAnswer(last_speechResultTrimmed, response, 'constant');
+    }
+    catch (error2) {
+      console.log('Error:', error2);
+    }
 
     // last_speechResultTrimmed = last_speechResultTrimmed;
-    lastSearchWasFull = false;
-    lastSearchResultIdx = -2;
+    lastSearchWasFull = true;
+    lastSearchResultIdx = -1;
 
-    callback(response);
-  }
-  else {
-    var newIdx = lastSearchWasFull ? lastSearchResultIdx + 1 : 0;
-    searchFull(last_speechResultTrimmed, newIdx, (resp) => {
-      // last_speechResultTrimmed = last_speechResultTrimmed;
-      lastSearchWasFull = true;
-      lastSearchResultIdx = newIdx;
-
-      callback(resp);
-    }, () => {
-      var response = response_default_template({ speechResult : speechResult });
-      storeAnswer(last_speechResultTrimmed, response, 'constant');
-
-      // last_speechResultTrimmed = last_speechResultTrimmed;
-      lastSearchWasFull = true;
-      lastSearchResultIdx = -1;
-
-      callback(response);
-    });
+    return response;
   }
 }
-
-export { search, next };

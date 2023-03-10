@@ -10,8 +10,11 @@ import { matchInkeri, matchInkeriAny, matchStop, matchStopAny, matchNext, matchN
 import { init as initPushes, onEvent as onPushEvent } from './push.js';
 import { readUrl } from './reader.js';
 import { initTodoist, onTask } from './todoist.js';
+import { getGptAnswer } from './gpt.js';
 import { init as initNeuro, query as queryNeuro } from './neuro/index.js';
-import { VOICE_NAME } from './settings.js'
+import { VOICE_LANG, VOICE_NAME, VOICE_PITCH, VOICE_RATE } from './settings.js'
+import { init as recogitionInit, create as recognitionCreate, start as recognitionStart, stop as recognitionStop } from './recognition.js'
+import { speak } from './speech.js'
 
 // -- To Force https ------------------------------
 // -- https://stackoverflow.com/a/4723302/539470 --
@@ -28,144 +31,110 @@ gtag('js', new Date());
 gtag('config', 'UA-110108110-1');
 // --
 
-var SpeechRecognition = null;
-var SpeechGrammarList = null;
-var SpeechRecognitionEvent = null;
-var recognition = null;
-var recognition2 = null;
-try {
-  SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-  SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
-  SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
-  recognition = new SpeechRecognition();
-  recognition2 = new SpeechRecognition();
-} catch (e) {
-  console.log(e);
-  t_ga('speech_recognition', 'no_browser_support', navigator.userAgent + " -----> " + e.toString());
-  log_for_user("Ваш браузер не поддерживает распознавание речи. Пожалуйста откройте страницу в Google Chrome.");
+const isAlwaysOn = getUrlVars()['on'] == 1;
+if (isAlwaysOn) {
+  console.log("isAlwaysOn");
 }
-if (recognition) {
-  recognition.lang = 'ru-RU';
-  recognition.interimResults = false;
-  recognition.continuous = isAlwaysOn;
-  // recognition.maxAlternatives = 0;
-}
-else {
+
+recogitionInit();
+
+const mainRecognitionID = 'mainRecognition';
+const mainRecognition = recognitionCreate(mainRecognitionID, {
+  interimResults: false,
+  isAlwaysOn: isAlwaysOn,
+  onResult: (speechResult, speechResults) => {
+    setState(STATES.thinking, speechResult);
+  },
+  onError: (error) => {
+    console.log('mainRecognition: onError: error: ', error);
+
+    setState(STATES.initial);
+  },
+  onEnd: () => {
+    setState(STATES.initial);
+  }
+});
+
+const bgRecognitionID = 'bgRecognition';
+const bgRecognition = recognitionCreate(bgRecognitionID, {
+  interimResults: true,
+  isAlwaysOn: true,
+  onResult: async (speechResult, speechResults) => {
+    const speechResultsNC = speechResults.map(res => res[0]);
+
+    const stopWordMatched = matchStopAny(speechResultsNC);
+    const inkeriWordMatched = matchInkeriAny(speechResultsNC);
+    const nextWordMatched = matchNextAny(speechResultsNC);
+    console.log('bgRecognition: matchInkeri: ', inkeriWordMatched);
+    console.log('bgRecognition: matchStop: ', stopWordMatched);
+    console.log('bgRecognition: matchNext: ', nextWordMatched);
+
+    if (stopWordMatched) {
+      console.log('bgRecognition: stop word matched');
+      
+      tssss();
+    }
+    else if (nextWordMatched && inkeriWordMatched) {
+      console.log('bgRecognition: next word matched');
+      
+      const response = await next();
+      console.log('bgRecognition: next: response:', response);
+      if (response != null && response.trim() !== '') {
+        setState(STATES.thinking, response);
+      }
+      else {
+        setState(STATES.initial);
+      }
+    }
+  },
+  onError: (error) => {
+    console.log('bgRecognition: onError: error: ', error);
+
+    setTimeout(() => {
+      if (isState(STATES.speaking)) {
+        try {
+          recognitionStart(bgRecognitionID);
+        }
+        catch (e) {}
+      }
+    }, 500);
+  },
+  onEnd: () => {
+    console.log('bgRecognition: onError: error: ', error);
+
+    setTimeout(() => {
+      if (isState(STATES.speaking)) {
+        try {
+          recognitionStart(bgRecognitionID);
+        }
+        catch (e) {}
+      }
+    }, 500);
+  }
+});
+
+if (mainRecognition == null) {
   $(function() {
     $("#sttbtn").remove();
   });
 }
-var prevSpeechResult = "";
-if (recognition) {
-  recognition.onresult = function(event) {
-    var speechResult = event.results[0][0].transcript;
-    // diagnosticPara.textContent = 'Speech received: ' + speechResult + '.';
-    console.log('Result: ' + speechResult);
-    console.log('Confidence: ' + event.results[0][0].confidence);
-
-    speechResult = speechResult.toLowerCase().trim();
-
-    if (speechResult == "") {
-      console.log('empty');
-      return;
-    }
-    else if (speechResult == prevSpeechResult) {
-      console.log('duplicate');
-      return;
-    }
-    prevSpeechResult = speechResult;
-
-    setState(STATES.thinking, speechResult);
-  }
-
-  recognition.onerror = function(event) {
-    console.log('onerror');
-    setState(STATES.initial);
-    if (!isAlwaysOn) {
-      alert("Speech recognition error: " + event.error);
-    }
-    t_ga('speech_recognition', 'recognition_error', event.error.toString());
-  }
-  
-  recognition.onend = function(event) {
-    if (isState(STATES.listening)) {
-      console.log('onend');
-      setState(STATES.initial);
-    }
-  };
-}
-
-if (recognition2) {
-  recognition2.lang = 'ru-RU';
-  recognition2.interimResults = true;
-  recognition2.continuous = true;
-  // recognition.maxAlternatives = 0;
-}
-if (recognition2) {
-  recognition2.onresult = function(event) {
-    // console.log('recognition2.onresult: event: ', event);
-    var speechResults = _.flatMap(event.results, (res) => _.map(res, (res2) => [ res2.transcript.toLowerCase() , res2.confidence ]));
-    var speechResultsNC = _.flatMap(event.results, (res) => _.map(res, (res2) => res2.transcript.toLowerCase()));
-    console.log('recognition2.onresult: results: ', speechResults);
-    var stopWordMatched = matchStopAny(speechResultsNC);
-    var inkeriWordMatched = matchInkeriAny(speechResultsNC);
-    var nextWordMatched = matchNextAny(speechResultsNC);
-    console.log('matchInkeri: ', inkeriWordMatched);
-    console.log('matchStop: ', stopWordMatched);
-    console.log('matchNext: ', nextWordMatched);
-    if (stopWordMatched) {
-      console.log('stop word matched');
-      tssss();
-    }
-    else if (nextWordMatched && inkeriWordMatched) {
-      console.log('next word matched');
-      next((response) => {
-        console.log("main: next [speaking]: response: ", response);
-        if (response.trim() != "") {
-          setState(STATES.thinking, response);
-        }
-        else {
-          setState(STATES.initial);
-        }
-      });
-    }
-  }
-
-  recognition2.onerror = function(error) {
-    console.log('recognition2.onerror: error: ', error);
-    setTimeout(function() {
-      if (isState(STATES.speaking)) {
-        try {
-          recognition2.start();
-        }
-        catch (e) {}
-      }
-    }, 500);
-  }
-
-  recognition2.onend = function(event) {
-    console.log('recognition2.onend: event: ', event);
-    setTimeout(function() {
-      if (isState(STATES.speaking)) {
-        try {
-          recognition2.start();
-        }
-        catch (e) {}
-      }
-    }, 500);
-  }
-}
-
-
 
 addStateHandler(STATES.listening, {
   onAfter: (stOld, stNew) => {
     console.log('main: started listening');
-    var sttBtn = document.querySelector('#sttbtn');
+
+    const sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = true;
-    if (recognition) {
-      console.log("main: recogition start");
-      recognition.start();
+
+    if (mainRecognition != null) {
+      console.log('main: recogition start');
+      try {
+        recognitionStart(mainRecognitionID);
+      }
+      catch (error) {
+        console.log('main: recogition start: error:', error);
+        setState(STATES.initial);
+      }
     }
     else {
       setState(STATES.initial);
@@ -173,177 +142,132 @@ addStateHandler(STATES.listening, {
   },
   onExitBefore : (stOld, stNew) => {
     console.log('main: stopped listening');
-    var sttBtn = document.querySelector('#sttbtn');
+
+    const sttBtn = document.querySelector('#sttbtn');
     sttBtn.disabled = false;
-    if (recognition) {
-      console.log("main: recogition stop");
-      recognition.stop();
+
+    if (mainRecognition != null) {
+      console.log('main: recogition stop');
+      try {
+        recognitionStop(mainRecognition);
+      }
+      catch (error) {
+        console.log('main: recogition stop: error:', error);
+      }
     }
   }
 });
 
-let chatInitialized = false;
-
-const onAfterThinking  = (speechResult, resetState) => {
-  var response;
-  var images = [];
+const onAfterThinking = async (speechResult) => {
   console.log('onAfterThinking: speechResult:', speechResult);
-  if (speechResult.startsWith("gpt ")) {
+
+  let response = null;
+  let images = [];
+  
+  if (speechResult.startsWith('gpt ')) {
     const t = speechResult.slice(4).trim();
-    if (t != "") {
-      const exec = () => {
-        fetch('http://localhost:5000/chat?q=' + encodeURIComponent(t))
-        .then(resp => resp.text())
-        .then(resp => {
-          console.log('response:', resp);
-
-          const json = JSON.parse(resp);
-          if (!json.response) {
-            return;
-          }
-
-          setState(STATES.speaking, {
-            text: json.response,
-            images: [],
-            resetState: resetState
-          });
-        });
-      };
-
-      if (!chatInitialized) {
-        fetch('http://localhost:5000/chat-init', {
-          method: 'POST',
-          body: JSON.stringify({
-            female: true,
-            name: 'Инкери'
-          }),
-          headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-          },
-          cache: "no-cache"
-        })
-        .then(iresp => iresp.text())
-        .then(iresp => {
-          chatInitialized = true;
-          console.log('chat initialized', iresp);
-
-          exec();
-        });
-      }
-      else {
-        exec();
-      }
-    }
-
-    return;
-  }
-  else if (speechResult.startsWith("say ") || speechResult.startsWith("скажи ")) {
-    const t = speechResult.slice(4).trim();
-    if (t != "") {
-      setState(STATES.speaking, {
-        text: t,
-        images: [],
-        resetState: resetState
-      });
+    console.log('!GPT:', t);
+    if (t !== '') {
+      response = await getGptAnswer();
     }
   }
-  else if (speechResult.startsWith("img ")) {
-    console.log('Showing image')
+  else if (speechResult.startsWith('say ') || speechResult.startsWith('скажи ')) {
     const t = speechResult.slice(4).trim();
-    if (t != "") {
-      showImages([ t ]);
-      setState(STATES.initial);
-      return;
+    console.log('!Saying:', t);
+    if (t !== '') {
+      response = t;
+    }
+  }
+  else if (speechResult.startsWith('img ')) {
+    console.log('!Showing image')
+    const t = speechResult.slice(4).trim();
+    if (t !== '') {
+      images = [ t ];
     }
   }
   else if (matchStop(speechResult)) {
-    console.log('stop');
+    console.log('!Stop');
     tssss();
     return;
   }
-  else if (speechResult.includes("тюлен") || speechResult.includes("нерп")) {
+  else if (speechResult.includes('тюлен') || speechResult.includes('нерп')) {
+    console.log('!nerpa')
+
     response = getSealText();
     images = getSealTextImages();
-  } else if(speechResult.includes("вальдшне")) {
+  }
+  else if(speechResult.includes('вальдшне')) {
+    console.log('!woodcock')
+
     response = woodcocks;
-  } else if(speechResult.includes("зомби")) {
+  }
+  else if(speechResult.includes('зомби')) {
+    console.log('!zombies')
+
     response = getZombies();
     images = getZombieTextImages();
-  } else if(speechResult.includes("погод")) {
-    response = weather;
-  } else if(speechResult.includes("статус") || speechResult.includes("обстановк")) {
-    response = get_status();
-  } else if(speechResult.includes("крипер") || speechResult.includes("страш")) {
-    loadKriperStory((response) => {
-      console.log("main: thinking: kriper: response: ", response);
-      if (response.trim() != "") {
-        setState(STATES.speaking, {
-          text: response,
-          images: []
-        });
-      }
-      else {
-        setState(STATES.initial);
-      }
-    });
-    return;
-  } else if (speechResult.includes("матриц") || speechResult.includes("matrix")) {
-    console.log("main: thinking: matrix");
-    showToken();
-    setState(STATES.initial);
-  }  else if (matchNext(speechResult) && matchInkeri(speechResult)) {
-    next((response) => {
-      console.log("main: next [thinking]: response:", response);
-      if (response.trim() != "") {
-        setState(STATES.speaking, {
-          text: response,
-          images: []
-        });
-      }
-      else {
-        setState(STATES.initial);
-      }
-    });
-    return;
-  } else if(isAlwaysOn && matchInkeri(speechResult)) {
-    search(
-      speechResult,
-      (response) => {
-        console.log("main: thinking: inkeri: response: ", response);
-        if (response.trim() != "") {
-          setState(STATES.speaking, {
-            text: response,
-            images: []
-          });
-        }
-        else {
-          setState(STATES.initial);
-        }
-      });
-    return;      
-  } else if(speechResult != "") {
-    t_ga('speech_recognition', 'unknown_phrase', speechResult);
-    search(
-      speechResult,
-      (response) => {
-        console.log("main: thinking: unknown: response: ", response);
-        if (response.trim() != "") {
-          setState(STATES.speaking, {
-            text: response,
-            images: []
-          });
-        }
-        else {
-          setState(STATES.initial);
-        }
-      });
-    return;
   }
-  else {
-    return;
+  else if(speechResult.includes('погод')) {
+    console.log('!weather')
+
+    response = weather;
+  }
+  else if(speechResult.includes('статус') || speechResult.includes('обстановк')) {
+    console.log('!status')
+
+    response = get_status();
+  }
+  else if(speechResult.includes('крипер') || speechResult.includes('страш')) {
+    console.log('!creeper')
+
+    const r = await loadKriperStory();
+    if (r == null || r == '') {
+      response = 'Ничего не нашла';
+    }
+      
+    console.log('onAfterThinking: creeper: response: ', r);
+
+    if (response.trim() != '') {
+      response = r;
+    }
+  }
+  else if (speechResult.includes('матриц') || speechResult.includes('matrix')) {
+    console.log("!matrix");
+    showToken();
+  }
+  else if (matchNext(speechResult) && matchInkeri(speechResult)) {
+    console.log('!next')
+
+    const r = await next();
+    if (r.trim() != '') {
+      response = r
+    }
+  }
+  else if(isAlwaysOn && matchInkeri(speechResult)) {
+    console.log('!search')
+
+    const r = await search(speechResult);
+
+    console.log("main: thinking: inkeri: response: ", r);
+    if (r.trim() != "") {
+      response = r
+    }    
+  }
+  else if(speechResult != '') {
+    console.log('!unknown')
+
+    t_ga('speech_recognition', 'unknown_phrase', speechResult);
+
+    const r = await search(speechResult);
+
+    console.log("main: thinking: unknown: response: ", r);
+    
+    if (r.trim() != "") {
+      response = r;
+    }
   }
 
-  if (response != "") {
+  if ((response != null && response !== '') || (images != null && images.length > 0 )) {
     setState(STATES.speaking, {
       text: response,
       images: images
@@ -355,51 +279,34 @@ const onAfterThinking  = (speechResult, resetState) => {
 }
 
 addStateHandler(STATES.thinking, {
-  onAfter: (stOld, stNew, sppechResult) =>  {
-    onAfterThinking(sppechResult, true);
+  onAfter: (stOld, stNew, speechResult) => {
+    onAfterThinking(speechResult, true);
   }
 });
 
-const onAfterSpeaking = (textToSpeak, images, resetState) => {
+const onAfterSpeaking = (textToSpeak, images) => {
   console.log('onAfterSpeaking: textToSpeak:', textToSpeak);
+  
   try {
-    const synth = window.speechSynthesis;
+    const textToSpeakPresent = textToSpeak != null && textToSpeak !== '';
+    if (textToSpeakPresent) {
+      speak(textToSpeak, () => {
+        setState(STATES.initial);
+      });
+    }
 
-    // linux:
-    // :: chromium does not have built-in speech engine
-    // :: firefox-developer-edition optionally requires speech-dispatcher: Text-to-Speech
-    // :: qt5-speech optionally requires speech-dispatcher: speech-dispatcher TTS backend
-    // => speech-dispatcher is needed
-    // as speech engine RHVoice worked fine for me
+    if (images != null && images.length > 0) {
+      showImages(images);
 
-    const voices = synth.getVoices();
-    const ru_voices = voices.filter(function(v){
-      return v.lang == 'ru' || v.lang == 'ru-RU';
-    });
-    const available_voices = ru_voices.length > 0 ? ru_voices : voices;
-    console.log('ru voices:', ru_voices);
-    console.log('all voices:', voices);
-
-    var voice = available_voices.find(v => v.name === VOICE_NAME) ?? available_voices.find(v => v.default) ?? available_voices[0];
-    console.log('voice:', voice);
-
-    // window, not var because onend does not trigger otherwise
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=509488#c11
-    window.utterThis = new SpeechSynthesisUtterance(textToSpeak);
-    utterThis.rate = 1.1;
-    utterThis.pitch = 1.4;
-    utterThis.lang = 'ru-RU';
-    utterThis.voice = voice;
-
-    utterThis.addEventListener('end', function () {
-      setState(STATES.initial);
-    });
-
-    showImages(images);
-    synth.speak(utterThis);
-  } catch(e) {
-    console.log(e);
+      if (!textToSpeakPresent) {
+        setState(STATES.initial);
+      }
+    }
+  }
+  catch(error) {
+    console.log('onAfterSpeaking: error:', error);
     t_ga('speech_synthesis', 'general_error', navigator.userAgent + " -----> " + e.toString());
+
     setState(STATES.initial);
   }
 
@@ -414,14 +321,21 @@ const onAfterSpeaking = (textToSpeak, images, resetState) => {
 
 addStateHandler(STATES.speaking, {
   onAfter: (stOld, stNew, data) =>  {
-    onAfterSpeaking(data.text, data.images, data.resetState);
+    onAfterSpeaking(data.text, data.images);
   },
   onExitBefore: (stOld, stNew) => {
     speechSynthesis.cancel();
-    console.log("main: recogition2 stop");
-    if (recognition2) {
-      recognition2.stop();
+    console.log("main: bgRecognition stop");
+
+    if (bgRecognition != null) {
+      try {
+        recognitionStop(bgRecognitionID);
+      }
+      catch (error) {
+        console.log('main: bgRecognition: stop: error:', error);
+      }
     }
+
     stopImages();
   }
 });
@@ -432,7 +346,7 @@ addStateHandler(STATES.initial, {
       setTimeout(() => {
         if (isState(STATES.initial)) {
           if (Math.random() < REMEMBER_PROBABILITY) {
-            startRemembering()
+            startRemembering();
           }
           else {
             startListening();
@@ -459,9 +373,7 @@ addStateHandler(STATES.remembering, {
   }
 });
 
-
-
-var startListening = function() {
+const startListening = () => {
   if (isState(STATES.initial)) {
     setState(STATES.listening);
   }
@@ -470,7 +382,7 @@ var startListening = function() {
   }
 };
 
-var stopListening = function() {
+const stopListening = () => {
   if (isState(STATES.listening)) {
     setState(STATES.initial);
   }
@@ -479,24 +391,26 @@ var stopListening = function() {
   }
 }
 
-var startRemembering = function() {
+const startRemembering = () => {
   if (isState(STATES.initial)) {
     setState(STATES.remembering);
   }
   else {
-    console.log('startRemembering: wromg state');
+    console.log('startRemembering: wrong state');
   }
 }
 
-var tssss = function() {
+const tssss = function() {
   if (isState(STATES.initial)) {
     startListening();
-  } else if (isState(STATES.speaking) || isState(STATES.listening) || (isState(STATES.thinking))) {
+  }
+  else if (isState(STATES.speaking) || isState(STATES.listening) || (isState(STATES.thinking))) {
     setState(STATES.initial);
   }
   else {
     console.log('tssss: wrong state');
   }
+  
   stopImages();
 }
 
@@ -524,13 +438,6 @@ window.tell_status = function() {
     console.log('tell_status: wrong state');
   }
 };
-
-
-
-var isAlwaysOn = getUrlVars()['on'] == 1;
-if (isAlwaysOn) {
-  console.log("isAlwaysOn");
-}
 
 var weather = "";
 var woodcocks = "Ситуация с ва́льдшнепами настораживает. Двадцать второго апреля в городе Сосновый бор Ленинградской области был обнаружен разбившийся вальдшнеп.";
