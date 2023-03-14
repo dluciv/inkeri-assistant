@@ -1,9 +1,10 @@
 import { VOICE_NAME, VOICE_RATE, VOICE_PITCH, VOICE_LANG } from './settings.js'
 
 let voice = null;
+let synth = null;
 
 export const init = () => {
-    const synth = window.speechSynthesis;
+    synth = window.speechSynthesis;
 
     // linux:
     // :: chromium does not have built-in speech engine
@@ -21,9 +22,9 @@ export const init = () => {
     const voices = ruVoices.length > 0 ? ruVoices : allVoices;
 
     voice =
-        available_voices.find(v => v.name === VOICE_NAME)
-        ?? available_voices.find(v => v.default)
-        ?? available_voices[0];
+        voices.find(v => v.name === VOICE_NAME)
+        ?? voices.find(v => v.default)
+        ?? voices[0];
     console.log('speech: init: voice:', voice);
 }
 

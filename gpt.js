@@ -2,7 +2,7 @@ let chatInitialized = false;
 
 export const getGptAnswer = async (t) => {
     try {
-        if (t == '') return null;
+        if (t == null || t === '') return null;
 
         if (!chatInitialized) {
             const iresp = await fetch('http://localhost:5000/chat-init', {
@@ -24,11 +24,10 @@ export const getGptAnswer = async (t) => {
         }
 
         const resp = await fetch('http://localhost:5000/chat?q=' + encodeURIComponent(t));
-        const text = await resp.text();
+        const json = await resp.json();
         
-        console.log('response:', text);
+        console.log('response:', json);
 
-        const json = JSON.parse(resp);
         if (!json.response) return null;
 
         return json.response;

@@ -18,8 +18,9 @@ import { speak } from './speech.js'
 
 // -- To Force https ------------------------------
 // -- https://stackoverflow.com/a/4723302/539470 --
-if (location.protocol != 'https:' && location.hostname != 'localhost' && location.hostname != '127.0.0.1')
+if (location.protocol != 'https:' && location.hostname != 'localhost' && location.hostname != '127.0.0.1' && !location.hostname.startsWith("192.168.")) {
   location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+}
 // --
 
 // -- Global site tag (gtag.js) - Google Analytics --
@@ -168,7 +169,7 @@ const onAfterThinking = async (speechResult) => {
     const t = speechResult.slice(4).trim();
     console.log('!GPT:', t);
     if (t !== '') {
-      response = await getGptAnswer();
+      response = await getGptAnswer(t);
     }
   }
   else if (speechResult.startsWith('say ') || speechResult.startsWith('скажи ')) {
